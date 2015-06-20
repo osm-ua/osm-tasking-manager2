@@ -99,10 +99,35 @@ osmtm.project = (function() {
     lmap = L.map('leaflet');
     L.control.scale().addTo(lmap);
     // create the tile layer with correct attribution
-    var osmUrl='http://{s}.tile.openstreetmap.fr/hot/{z}/{x}/{y}.png';
-    var osmAttrib=osmAttribI18n;
-    var osm = new L.TileLayer(osmUrl, {attribution: osmAttrib});
-    lmap.addLayer(osm);
+    ////var osmUrl='http://{s}.tile.openstreetmap.fr/hot/{z}/{x}/{y}.png';
+    ////var osmAttrib=osmAttribI18n;
+    ////var osm = new L.TileLayer(osmUrl, {attribution: osmAttrib});
+    ////lmap.addLayer(osm);
+
+    var OpenStreetMap = L.tileLayer('http://tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        name: 'OpenStreetMap', 
+        maxZoom: 19, 
+        attribution: 'Data &copy; <a href="http://www.openstreetmap.org/copyright">OpenStreetMap contibutors</a>'
+        });
+    var MapSurferNET = L.tileLayer('http://korona.geog.uni-heidelberg.de/tiles/roads/x={x}&y={y}&z={z}', {
+        name: 'MapSurfer.NET', 
+        maxZoom: 19, 
+        attribution: 'Data &copy; <a href="http://www.openstreetmap.org/copyright">OpenStreetMap contibutors</a>, Tiles © <a href="http://giscience.uni-hd.de/">GIScience Research Group @ Heidelberg University</a>'
+        });
+    var MapQuest = L.tileLayer('http://otile{s}.mqcdn.com/tiles/1.0.0/map/{z}/{x}/{y}.jpeg', {
+        name: 'MapQuest', 
+        maxZoom: 18, 
+        subdomains: '1234',
+        attribution: 'Data &copy; <a href="http://www.openstreetmap.org/copyright">OpenStreetMap contibutors</a>, Tiles &copy; <a href=\"http://www.mapquest.com/\">MapQuest</a>'
+        });
+    var baseLayers = {
+        "MapSurfer.NET": MapSurferNET, 
+        "OpenStreetMap": OpenStreetMap, 
+        "MapQuest": MapQuest
+        };
+    var overlays = { };
+    lmap.addLayer(OpenStreetMap);
+    L.control.layers(baseLayers, overlays).addTo(lmap);
 
     var layer = new L.geoJson(geometry, {
       style: {
