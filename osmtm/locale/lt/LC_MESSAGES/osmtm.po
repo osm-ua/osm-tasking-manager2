@@ -1,23 +1,24 @@
 # English translations for osmtm.
 # Copyright (C) 2015 ORGANIZATION
 # This file is distributed under the same license as the osmtm project.
-# 
+#
 # Translators:
 # Aurimas Fišeras <aurimas@members.fsf.org>, 2014-2015
 msgid ""
 msgstr ""
-"Project-Id-Version: osm-tasking-manager2\n"
+"Project-Id-Version:  osm-tasking-manager2\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
 "POT-Creation-Date: 2015-03-11 12:54+0100\n"
 "PO-Revision-Date: 2015-03-11 11:54+0000\n"
 "Last-Translator: Dražen Odobašić <dodobas@candela-it.com>\n"
-"Language-Team: Lithuanian (http://www.transifex.com/projects/p/osm-tasking-manager2/language/lt/)\n"
+"Language-Team: Lithuanian (http://www.transifex.com/projects/p/osm-"
+"tasking-manager2/language/lt/)\n"
+"Plural-Forms: nplurals=3; plural=(n%10==1 && n%100!=11 ? 0 : n%10>=2 && "
+"(n%100<10 || n%100>=20) ? 1 : 2)\n"
 "MIME-Version: 1.0\n"
-"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Type: text/plain; charset=utf-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 "Generated-By: Babel 1.3\n"
-"Language: lt\n"
-"Plural-Forms: nplurals=3; plural=(n%10==1 && n%100!=11 ? 0 : n%10>=2 && (n%100<10 || n%100>=20) ? 1 : 2);\n"
 
 #: osmtm/templates/about.mako:10 osmtm/templates/base.mako:111
 #: osmtm/templates/home.mako:93
@@ -27,14 +28,23 @@ msgstr "Apie užduočių tvarkytuvę"
 #: osmtm/templates/about.mako:12 osmtm/templates/home.mako:95
 msgid ""
 "OSM Tasking Manager is a mapping tool designed and built for the "
-"Humanitarian OSM Team collaborative mapping. The purpose of the tool is to "
-"divide up a mapping job into smaller tasks that can be completed rapidly. It"
-" shows which areas need to be mapped and which areas need the mapping "
-"validated. <br />This approach facilitates the distribution of tasks to the "
-"various mappers in a context of emergency. It also permits to control the "
-"progress and the homogeinity of the work done (ie. Elements to cover, "
-"specific tags to use, etc.)."
-msgstr "OSM užduočių tvarkytuvė yra žemėlapių kūrimo įrankis, sukurtas OSM humanistų komandai, skirtas žemėlapių kūrimui bendradarbiaujant. Šio įrankio tikslas yra padalinti žemėlapio kūrimo darbą į mažesnes užduotis, kurios gali būti greitai užbaigtos. Jis parodo, kurios vietos turi būti pažymėtos žemėlapyje, kurių žymėjimai žemėlapyje turi būti patikrinti. <br />Šis būdas palengvina užduočių paskirstymą įvairiems žemėlapių kūrėjams kritinių situacijų atveju. Jis taip pat leidžia kontroliuoti atliekamo darbo eigą ir homogeniškumą (pvz., kuriuos elementus įtraukti, kokias žymas naudoti, etc.)."
+"Humanitarian OSM Team collaborative mapping. The purpose of the tool is "
+"to divide up a mapping job into smaller tasks that can be completed "
+"rapidly. It shows which areas need to be mapped and which areas need the "
+"mapping validated. <br />This approach facilitates the distribution of "
+"tasks to the various mappers in a context of emergency. It also permits "
+"to control the progress and the homogeinity of the work done (ie. "
+"Elements to cover, specific tags to use, etc.)."
+msgstr ""
+"OSM užduočių tvarkytuvė yra žemėlapių kūrimo įrankis, sukurtas OSM "
+"humanistų komandai, skirtas žemėlapių kūrimui bendradarbiaujant. Šio "
+"įrankio tikslas yra padalinti žemėlapio kūrimo darbą į mažesnes užduotis,"
+" kurios gali būti greitai užbaigtos. Jis parodo, kurios vietos turi būti "
+"pažymėtos žemėlapyje, kurių žymėjimai žemėlapyje turi būti patikrinti. "
+"<br />Šis būdas palengvina užduočių paskirstymą įvairiems žemėlapių "
+"kūrėjams kritinių situacijų atveju. Jis taip pat leidžia kontroliuoti "
+"atliekamo darbo eigą ir homogeniškumą (pvz., kuriuos elementus įtraukti, "
+"kokias žymas naudoti, etc.)."
 
 #: osmtm/templates/about.mako:14
 msgid "Sponsorship and Funding"
@@ -43,8 +53,12 @@ msgstr "Rėmimas ir finansavimas"
 #: osmtm/templates/about.mako:15
 msgid ""
 "OSM Tasking Manager was designed and built for the <a "
-"href=\"http://hot.openstreetmap.org\">Humanitarian OpenStreetMap Team</a>."
-msgstr "OSM užduočių tvarkytuvė buvo sukurta  <a href=\"http://hot.openstreetmap.org\">OpenStreetMap humanistų komandai</a>."
+"href=\"http://hot.openstreetmap.org\">Humanitarian OpenStreetMap "
+"Team</a>."
+msgstr ""
+"OSM užduočių tvarkytuvė buvo sukurta  <a "
+"href=\"http://hot.openstreetmap.org\">OpenStreetMap humanistų "
+"komandai</a>."
 
 #: osmtm/templates/about.mako:17
 msgid "With the invaluable help from:"
@@ -66,25 +80,33 @@ msgstr "Atviras kodas"
 msgid ""
 "OSM Tasking Manager is an open source software.<br>Feel free to report "
 "issues and contribute."
-msgstr "OSM užduočių tvarkytuvė yra atviro kodo programinė įranga.<br>Prašome pranešti apie problemas ir prisidėti."
+msgstr ""
+"OSM užduočių tvarkytuvė yra atviro kodo programinė įranga.<br>Prašome "
+"pranešti apie problemas ir prisidėti."
 
 #: osmtm/templates/about.mako:58
 msgid ""
-"The <a href=\"http://github.com/hotosm/osm-tasking-manager2\">application "
-"code</a> is available on github"
-msgstr "<a href=\"http://github.com/hotosm/osm-tasking-manager2\">Programos kodas</a> yra prieinamas github"
+"The <a href=\"http://github.com/hotosm/osm-tasking-manager2\">application"
+" code</a> is available on github"
+msgstr ""
+"<a href=\"http://github.com/hotosm/osm-tasking-manager2\">Programos "
+"kodas</a> yra prieinamas github"
 
 #: osmtm/templates/about.mako:60
 msgid ""
 "Lead developer: Pierre GIRAUD (<a "
 "href=\"//www.camptocamp.com\">Camptocamp</a>)"
-msgstr "Pagrindinis kūrėjas: Pierre GIRAUD (<a href=\"//www.camptocamp.com\">Camptocamp</a>)"
+msgstr ""
+"Pagrindinis kūrėjas: Pierre GIRAUD (<a "
+"href=\"//www.camptocamp.com\">Camptocamp</a>)"
 
 #: osmtm/templates/about.mako:61
 msgid ""
 "with the help of <a href=\"https://github.com/hotosm/osm-tasking-"
 "manager2/graphs/contributors\">other contributors</a>."
-msgstr "su kitų <a href=\"https://github.com/hotosm/osm-tasking-manager2/graphs/contributors\">talkininkų</a> pagalba."
+msgstr ""
+"su kitų <a href=\"https://github.com/hotosm/osm-tasking-"
+"manager2/graphs/contributors\">talkininkų</a> pagalba."
 
 #: osmtm/templates/about.mako:70
 msgid "Version"
@@ -110,12 +132,21 @@ msgstr "Turite klausimų apie užduotis, žymėjimą ar HOT?"
 msgid ""
 "If you have any questions about a project, a task or mapping in general "
 "please ask on our mailing list: <a "
-"href=\"https://lists.openstreetmap.org/listinfo/hot\">HOT E-Mail List</a><br"
-" /><br />Or visit us in our IRC Chat Channel, just select #hot from the pop "
-"down channel list:<br /><a href=\"http://irc.openstreetmap.org/\">OSM HOT "
-"IRC Channel #hot</a><br /><br />General inquries and comments are welcomed "
-"at: <a href=\"mailto:info@hotosm.org\" target=\"_top\">info@hotosm.org</a>"
-msgstr "Jei turite klausimų apie projektą, užduotį ar žymėjimą apskritai, klauskite mūsų elektroninio pašto grupėje: <a href=\"https://lists.openstreetmap.org/listinfo/hot\">HOT el. pašto grupė</a><br /><br />Arba aplankykite mus IRC pokalbių kanale, tiesiog pasirinkite #hot išskleidžiamajame kanalų sąraše:<br /><a href=\"http://irc.openstreetmap.org/\">OSM HOT IRC kanalas #hot</a><br /><br />Bendri paklausimai ir komentarai laukiami adresu: <a href=\"mailto:info@hotosm.org\" target=\"_top\">info@hotosm.org</a>"
+"href=\"https://lists.openstreetmap.org/listinfo/hot\">HOT E-Mail "
+"List</a><br /><br />Or visit us in our IRC Chat Channel, just select #hot"
+" from the pop down channel list:<br /><a "
+"href=\"http://irc.openstreetmap.org/\">OSM HOT IRC Channel #hot</a><br "
+"/><br />General inquries and comments are welcomed at: <a "
+"href=\"mailto:info@hotosm.org\" target=\"_top\">info@hotosm.org</a>"
+msgstr ""
+"Jei turite klausimų apie projektą, užduotį ar žymėjimą apskritai, "
+"klauskite mūsų elektroninio pašto grupėje: <a "
+"href=\"https://lists.openstreetmap.org/listinfo/hot\">HOT el. pašto "
+"grupė</a><br /><br />Arba aplankykite mus IRC pokalbių kanale, tiesiog "
+"pasirinkite #hot išskleidžiamajame kanalų sąraše:<br /><a "
+"href=\"http://irc.openstreetmap.org/\">OSM HOT IRC kanalas #hot</a><br "
+"/><br />Bendri paklausimai ir komentarai laukiami adresu: <a "
+"href=\"mailto:info@hotosm.org\" target=\"_top\">info@hotosm.org</a>"
 
 #: osmtm/templates/custom.mako:11
 msgid "Email HOT at"
@@ -279,9 +310,11 @@ msgstr "${license_name} licencijos pripažinimas"
 
 #: osmtm/templates/license.mako:11
 msgid ""
-"Access via this site to imagery identified as <em>\"${license_name}\"</em> "
-"is subject to the following usage terms:"
-msgstr "Prieiga prie vaizdų, identifikuotų kaip <em>„${license_name}“</em>, per šią svetainę galima tik pagal šias naudojimo sąlygas:"
+"Access via this site to imagery identified as "
+"<em>\"${license_name}\"</em> is subject to the following usage terms:"
+msgstr ""
+"Prieiga prie vaizdų, identifikuotų kaip <em>„${license_name}“</em>, per "
+"šią svetainę galima tik pagal šias naudojimo sąlygas:"
 
 #: osmtm/templates/license.mako:24 osmtm/views/license.py:41
 msgid "I AGREE"
@@ -423,8 +456,9 @@ msgstr "Užduoties instrukcijos (neprivalomos)"
 
 #: osmtm/templates/project.edit.mako:236
 msgid ""
-"Put here anything that can be useful to users while taking a task. {x}, {y} "
-"and {z} will be replaced by the corresponding parameters for each task."
+"Put here anything that can be useful to users while taking a task. {x}, "
+"{y} and {z} will be replaced by the corresponding parameters for each "
+"task."
 msgstr ""
 
 #: osmtm/templates/project.edit.mako:237
@@ -432,7 +466,10 @@ msgid ""
 "\" This task involves loading extra data. Click "
 "[here](http://localhost:8111/import?new_layer=true&url=http://www.domain.com/data/{x}/{y}/{z}/routes_2009.osm)"
 " to load the data into JOSM"
-msgstr "„Šiai užduočiai reikia įkelti išorinių duomenų. Spauskite [čia](http://localhost:8111/import?new_layer=true&url=http://www.domain.com/data/{x}/{y}/{z}/routes_2009.osm) duomenims į JOSM įkelti"
+msgstr ""
+"„Šiai užduočiai reikia įkelti išorinių duomenų. Spauskite "
+"[čia](http://localhost:8111/import?new_layer=true&url=http://www.domain.com/data/{x}/{y}/{z}/routes_2009.osm)"
+" duomenims į JOSM įkelti"
 
 #: osmtm/templates/project.edit.mako:248
 msgid "Area modifications are not available yet."
@@ -444,9 +481,11 @@ msgstr "svarbiausios vietos: ${count_of}"
 
 #: osmtm/templates/project.edit.mako:260
 msgid ""
-"If you want mappers to work on the highest priority areas first, draw one or"
-" more polygons within the project area."
-msgstr "Jei norite, kad žemėlapių kūrėjai pirmiau dirbtų su svarbiausiomis vietomis, apibrėžkite vieną ar daugiau daugiakampių projekto vietoje."
+"If you want mappers to work on the highest priority areas first, draw one"
+" or more polygons within the project area."
+msgstr ""
+"Jei norite, kad žemėlapių kūrėjai pirmiau dirbtų su svarbiausiomis "
+"vietomis, apibrėžkite vieną ar daugiau daugiakampių projekto vietoje."
 
 #: osmtm/templates/project.edit.mako:277
 msgid "URL to service"
@@ -460,7 +499,9 @@ msgstr "Pastaba:"
 msgid ""
 "Follow this format for TMS urls.<br>tms[22]:http://hiu-"
 "maps.net/hot/1.0.0/kathmandu_flipped/{zoom}/{x}/{y}.png"
-msgstr "Naudokite šį formatą TMS adresui.<br>tms[22]:http://hiu-maps.net/hot/1.0.0/kathmandu_flipped/{zoom}/{x}/{y}.png"
+msgstr ""
+"Naudokite šį formatą TMS adresui.<br>tms[22]:http://hiu-"
+"maps.net/hot/1.0.0/kathmandu_flipped/{zoom}/{x}/{y}.png"
 
 #: osmtm/templates/project.edit.mako:286
 msgid "Required License"
@@ -472,12 +513,17 @@ msgstr "Privatus"
 
 #: osmtm/templates/project.edit.mako:315
 msgid ""
-"Private means that only a given list of users can access this project. In "
-"order for the user's name to be available to add to the Allowed Users - they"
-" first must visit the URL for your instance of OSMTM and Authorize access to"
-" their OpenStreetMap account. After they've done this, their username should"
-" be available for the administrator to add."
-msgstr "„Privatus“ reiškia, kad tik naudotojai iš sąrašo gali prieiti prie šio projekto. Norint, kad naudotojo vardas būtų prieinamas įdėjimui į leidžiamų sąrašą jie pirmiau turi aplankyti jūsų OSMTM egzemplioriaus URL ir sankcionuoti prieigą prie savo OpenStreetMap paskyrų. Kai jie tai padarys, jų naudotojų vardai bus pasiekiami administratoriui."
+"Private means that only a given list of users can access this project. In"
+" order for the user's name to be available to add to the Allowed Users - "
+"they first must visit the URL for your instance of OSMTM and Authorize "
+"access to their OpenStreetMap account. After they've done this, their "
+"username should be available for the administrator to add."
+msgstr ""
+"„Privatus“ reiškia, kad tik naudotojai iš sąrašo gali prieiti prie šio "
+"projekto. Norint, kad naudotojo vardas būtų prieinamas įdėjimui į "
+"leidžiamų sąrašą jie pirmiau turi aplankyti jūsų OSMTM egzemplioriaus URL"
+" ir sankcionuoti prieigą prie savo OpenStreetMap paskyrų. Kai jie tai "
+"padarys, jų naudotojų vardai bus pasiekiami administratoriui."
 
 #: osmtm/templates/project.edit.mako:320
 msgid "Allowed users"
@@ -513,7 +559,9 @@ msgstr "Patarimas:"
 
 #: osmtm/templates/project.edit.mako:391
 msgid "You can use <a href class=\"markdown\">Markdown</a>. (HTML is not allowed)"
-msgstr "Galite naudoti <a href class=\"markdown\">Markdown</a>. (HTML neleidžiamas)"
+msgstr ""
+"Galite naudoti <a href class=\"markdown\">Markdown</a>. (HTML "
+"neleidžiamas)"
 
 #: osmtm/templates/project.edit.mako:407
 msgid "Preview"
@@ -569,9 +617,11 @@ msgstr "įvyko klaida"
 
 #: osmtm/templates/project.mako:107
 msgid ""
-"JOSM remote control did not respond. Do you have JOSM running and configured"
-" to be controlled remotely?"
-msgstr "JOSM nuotolinis valdymas neatsakė. Ar JOSM paleistas ir turi sukonfigūruotą nuotolinį valdymą?"
+"JOSM remote control did not respond. Do you have JOSM running and "
+"configured to be controlled remotely?"
+msgstr ""
+"JOSM nuotolinis valdymas neatsakė. Ar JOSM paleistas ir turi "
+"sukonfigūruotą nuotolinį valdymą?"
 
 #: osmtm/templates/project.mako:109
 msgid "Something wrong happened"
@@ -683,12 +733,17 @@ msgstr "Kvadratinis tinklelis"
 
 #: osmtm/templates/project.new.mako:94
 msgid ""
-"Area of interest is automatically split into grid cells. Each one is a task."
-msgstr "Dominanti vieta automatiškai padalinama į kvadratinius langelius. Kiekvienas langelis – užduotis."
+"Area of interest is automatically split into grid cells. Each one is a "
+"task."
+msgstr ""
+"Dominanti vieta automatiškai padalinama į kvadratinius langelius. "
+"Kiekvienas langelis – užduotis."
 
 #: osmtm/templates/project.new.mako:101
 msgid "You cannot select this option unless you import a file with polygons."
-msgstr "Negalite pasirinkti šio nustatymo, jei neimportavote failo su daugiakampiais."
+msgstr ""
+"Negalite pasirinkti šio nustatymo, jei neimportavote failo su "
+"daugiakampiais."
 
 #: osmtm/templates/project.new.mako:104
 msgid "Arbitrary Geometries"
@@ -824,9 +879,11 @@ msgstr ".gpx failas"
 
 #: osmtm/templates/task.editors.mako:30
 msgid ""
-"Tip: Download the following ${task_gpx_link} and load it in JOSM in order to"
-" see the current task boundary"
-msgstr "Patarimas: Atsisiųskite ${task_gpx_link} ir įkelkite į JOSM, kad pamatytumėte dabartinės užduoties ribą"
+"Tip: Download the following ${task_gpx_link} and load it in JOSM in order"
+" to see the current task boundary"
+msgstr ""
+"Patarimas: Atsisiųskite ${task_gpx_link} ir įkelkite į JOSM, kad "
+"pamatytumėte dabartinės užduoties ribą"
 
 #: osmtm/templates/task.empty.mako:15
 msgid "Select a task on the map"
@@ -895,7 +952,9 @@ msgstr "Atblokuoti"
 msgid ""
 "If you do not complete or release this task in time, it will be "
 "automatically unlocked"
-msgstr "Jei nebaigsite ar neatblokuosite šios užduoties laiku, ji bus automatiškai atblokuota"
+msgstr ""
+"Jei nebaigsite ar neatblokuosite šios užduoties laiku, ji bus "
+"automatiškai atblokuota"
 
 #: osmtm/templates/task.locked.mako:18
 msgid "min. left"
@@ -967,9 +1026,11 @@ msgstr "Pradėti žymėjimą"
 
 #: osmtm/templates/task.unlocked.mako:21
 msgid ""
-"Lock this task to tell others that you are currently reviewing it. Validate "
-"that this task has been mapped correctly and completely."
-msgstr "Užblokuoti šią užduotį, kad kiti žinotų, jog ją tikrinate. Patvirtinkite, kad ši užduotis buvo sužymėta žemėlapyje teisingai ir pilnai."
+"Lock this task to tell others that you are currently reviewing it. "
+"Validate that this task has been mapped correctly and completely."
+msgstr ""
+"Užblokuoti šią užduotį, kad kiti žinotų, jog ją tikrinate. Patvirtinkite,"
+" kad ši užduotis buvo sužymėta žemėlapyje teisingai ir pilnai."
 
 #: osmtm/templates/task.unlocked.mako:26
 msgid "Review the work"
@@ -1200,3 +1261,4 @@ msgstr "Tikriausiai nenorite naikinti savo privilegijų"
 #: osmtm/views/user.py:109
 msgid "Sorry, this user doesn't  exist"
 msgstr "Atsiprašome, šis naudotojas neegzistuoja"
+
