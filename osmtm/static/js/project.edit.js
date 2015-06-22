@@ -122,16 +122,17 @@ osmtm.project.edit.priority_areas = (function() {
         subdomains: '1234',
         attribution: 'Data &copy; <a href="http://www.openstreetmap.org/copyright">OpenStreetMap contibutors</a>, Tiles &copy; <a href=\"http://www.mapquest.com/\">MapQuest</a>'
         });
-    var Mapbox_Sat = L.tileLayer('http://{s}.tiles.mapbox.com/v4/openstreetmap.map-inh7ifmo/{zoom}/{x}/{y}.png?access_token=pk.eyJ1Ijoib3BlbnN0cmVldG1hcCIsImEiOiJncjlmd0t3In0.DmZsIeOW-3x-C5eX-wAqTw', {
+    var Mapbox_Sat = L.tileLayer('http://{s}.tiles.mapbox.com/v4/openstreetmap.map-inh7ifmo/{z}/{x}/{y}.png?access_token=pk.eyJ1Ijoib3BlbnN0cmVldG1hcCIsImEiOiJncjlmd0t3In0.DmZsIeOW-3x-C5eX-wAqTw', {
         name: 'Mapbox Satelite',
         maxZoom: 17,
         subdomains: 'abc',
         attribution: 'Tiles &copy; <a href="http://mapbox.com/">Mapbox</a>'
         });
-    var ukrortho = L.titleLayer('http://212.26.144.110/tile2/orto_10000/{zoom}/{x}/{-y}.jpg', {
+    var ukrortho = L.titleLayer('http://212.26.144.110/tile2/orto_10000/{z}/{x}/{y}.jpg', {
         name: 'Україна, ортофотомапи 2012',
         maxZoom: 16,
-        attribution = 'Tiles &copy; <a href="http://map.land.gov.ua/kadastrova-karta">ЦДЗК</a>'
+        tms: true,
+        attribution: 'Tiles &copy; <a href="http://map.land.gov.ua/kadastrova-karta">ЦДЗК</a>'
         });
     var baseLayers = {
         "MapSurfer.NET": MapSurferNET, 
