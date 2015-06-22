@@ -39,9 +39,9 @@ osmtm.project_new = (function() {
         subdomains: 'abc',
         attribution: 'Tiles &copy; <a href="http://mapbox.com/">Mapbox</a>'
         });
-    var ukrortho = L.titleLaayer('http://212.26.144.110/tile2/orto_10000/{zoom}/{x}/{-y}.jpg', {
+    var ukrortho = L.titleLayer('http://212.26.144.110/tile2/orto_10000/{zoom}/{x}/{-y}.jpg', {
         name: 'Україна, ортофотомапи 2012',
-        maxZoom 16,
+        maxZoom: 16,
         attribution = 'Tiles &copy; <a href="http://map.land.gov.ua/kadastrova-karta">ЦДЗК</a>'
         });
     var baseLayers = {
@@ -49,7 +49,7 @@ osmtm.project_new = (function() {
         "OpenStreetMap": OpenStreetMap, 
         "MapQuest": MapQuest,
         "Mapbox Satelite": Mapbox_Sat,
-        "Україна, ортофотомапи 2012": urkortho
+        "Україна, ортофотомапи 2012": ukrortho
         };
     var overlays = { };
     map.addLayer(OpenStreetMap);
