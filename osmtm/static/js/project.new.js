@@ -39,7 +39,7 @@ osmtm.project_new = (function() {
         subdomains: 'abc',
         attribution: 'Tiles &copy; <a href="http://mapbox.com/">Mapbox</a>'
         });
-    var ukrortho = L.titleLayer('http://212.26.144.110/tile2/orto_10000/{z}/{x}/{y}.jpg', {
+    var ukrortho = L.tileLayer('http://212.26.144.110/tile2/orto_10000/{z}/{x}/{y}.jpg', {
         name: 'Україна, ортофотомапи 2012',
         maxZoom: 16,
         tms: true,
