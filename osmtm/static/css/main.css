@@ -5510,8 +5510,8 @@ h1 {
 }
 .world_map {
   float: right;
-  background: url(../img/world_map.png);
-  width: 120px;
+  background: url(../img/ukr_map.png);
+  width: 87px;
   height: 60px;
   position: relative;
   margin: 2px;
