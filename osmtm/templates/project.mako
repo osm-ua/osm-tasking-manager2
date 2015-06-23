@@ -33,7 +33,7 @@ centroid = geometry_as_shape.centroid
 #coordMax.x = 41
 #coordMin.y = 44
 #coordMax.y = 53
-left = (centroid.x - 21) * 87 / (41 - 21) - 1
+left = (centroid.x - 21) * 120 / (41 - 21) - 1
 top = (-centroid.y + 53) * 60 / (53 - 44) - 1
 %>
 <%
