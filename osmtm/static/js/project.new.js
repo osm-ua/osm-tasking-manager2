@@ -43,7 +43,7 @@ osmtm.project_new = (function() {
     var ukrortho = L.tileLayer('http://212.26.144.110/tile2/orto_10000/{z}/{x}/{y}.jpg', {
         name: 'Україна, ортофотомапи 2012',
         maxZoom: 16,
-        tms:true,
+        tms: true,
         attribution: 'Tiles &copy; <a href="http://map.land.gov.ua/kadastrova-karta">ЦДЗК</a>'
         });
     var baseLayers = {

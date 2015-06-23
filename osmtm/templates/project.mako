@@ -29,8 +29,12 @@ from geoalchemy2 import shape
 from geoalchemy2.functions import ST_Centroid
 geometry_as_shape = shape.to_shape(project.area.geometry)
 centroid = geometry_as_shape.centroid
-left = (centroid.x + 180) * 120 / 360 - 1
-top = (-centroid.y + 90) * 60 / 180 - 1
+coordMin.x = 44.00
+coordMax.x = 53.00
+coordMin.y = 21.00
+coordMax.y = 41.00
+left = (centroid.x - coordMin.x) * imageWidth / (coordMax.x - coordMin.x) - 1
+top = (-centroid.y + coordMax.y) * imageHeight / (coordMax.y - coordMin.y) - 1
 %>
 <%
 # FIXME already done in base.mako
