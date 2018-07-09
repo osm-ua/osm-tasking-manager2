@@ -4,9 +4,21 @@
 [submodule "osmtm/static/js/lib/Leaflet.draw"]
 	path = osmtm/static/js/lib/Leaflet.draw
 	url = https://github.com/Leaflet/Leaflet.draw.git
-[submodule "osmtm/static/js/lib/jquery-timeago"]
-	path = osmtm/static/js/lib/jquery-timeago
-    url = https://github.com/rmm5t/jquery-timeago.git
 [submodule "osmtm/static/js/lib/leaflet-control-osm-geocoder"]
 	path = osmtm/static/js/lib/leaflet-control-osm-geocoder
 	url = https://github.com/k4r573n/leaflet-control-osm-geocoder.git
+[submodule "osmtm/static/js/lib/showdown"]
+	path = osmtm/static/js/lib/showdown
+	url = https://github.com/showdownjs/showdown.git
+[submodule "osmtm/static/js/lib/shapefile-js"]
+	path = osmtm/static/js/lib/shapefile-js
+	url = https://github.com/calvinmetcalf/shapefile-js.git
+[submodule "osmtm/static/js/lib/JavaScript-AutoComplete"]
+	path = osmtm/static/js/lib/JavaScript-AutoComplete
+	url = https://github.com/Pixabay/JavaScript-autoComplete.git
+[submodule "osmtm/static/js/lib/moment"]
+	path = osmtm/static/js/lib/moment
+	url = https://github.com/moment/moment.git
+[submodule "osmtm/static/js/lib/colorselector"]
+	path = osmtm/static/js/lib/colorselector
+	url = https://github.com/flaute/bootstrap-colorselector.git

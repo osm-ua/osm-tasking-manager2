@@ -17,24 +17,25 @@
       </div>
     </div>
 </div>
-<link rel="stylesheet" href="${request.static_url('osmtm:static/js/lib/Leaflet.draw/dist/leaflet.draw.css')}"/>
-<link rel="stylesheet" href="${request.static_url('osmtm:static/js/lib/leaflet-control-osm-geocoder/Control.OSMGeocoder.css')}"/>
-<script src="${request.static_url('osmtm:static/js/lib/leaflet.js')}"></script>
-<script src="${request.static_url('osmtm:static/js/lib/leaflet-control-osm-geocoder/Control.OSMGeocoder.js')}"></script>
-<script src="${request.static_url('osmtm:static/js/lib/Leaflet.draw/dist/leaflet.draw.js')}"></script>
-<script src="${request.static_url('osmtm:static/js/lib/leaflet-omnivore.min.js')}"></script>
+<link rel="stylesheet" href="${request.static_path('osmtm:static/js/lib/Leaflet.draw/dist/leaflet.draw.css')}"/>
+<link rel="stylesheet" href="${request.static_path('osmtm:static/js/lib/leaflet-control-osm-geocoder/Control.OSMGeocoder.css')}"/>
+<script src="${request.static_path('osmtm:static/js/lib/leaflet.js')}"></script>
+<script src="${request.static_path('osmtm:static/js/lib/leaflet-control-osm-geocoder/Control.OSMGeocoder.js')}"></script>
+<script src="${request.static_path('osmtm:static/js/lib/Leaflet.draw/dist/leaflet.draw.js')}"></script>
+<script src="${request.static_path('osmtm:static/js/lib/leaflet-omnivore.min.js')}"></script>
+<script src="${request.static_path('osmtm:static/js/lib/shapefile-js/dist/shp.min.js')}"></script>
 <script>
   var drawAreaOfInterestI18n = "${_('Draw the area of interest')}";
   var droppedFileCouldntBeLoadedI18n = "${_('Dropped file could not be loaded')}";
-  var droppedFileWasUnreadable = "${_('Dropped file was unreadable')}";
-  var pleaseProvideGeojsonOrKmlFile = "${_('Please provide a .geojson or a .kml file')}";
+  var droppedFileWasUnreadableI18n = "${_('Dropped file was unreadable')}";
+  var pleaseProvideGeojsonOrKmlFileI18n = "${_('Please provide a .geojson, .kml, or zipped .shp file')}";
 <%
     link = '<a href="http://www.openstreetmap.org/copyright">OpenStreetMap</a>'
     text = _(u'Map data © ${osm_link} contributors', mapping={'osm_link': link})
 %>
   var osmAttribI18n = '${text|n}';
 </script>
-<script src="${request.static_url('osmtm:static/js/project.new.js')}"></script>
+<script src="${request.static_path('osmtm:static/js/project.new.js')}"></script>
 
 </%block>
 
@@ -59,8 +60,8 @@
     <input type="file" val="" name="import" class="hidden" />
 <%
     link = '<a id="import" data-role="button" class="btn btn-default" rel="tooltip" title="%s">%s</a>' \
-           % (_('Provide a .geojson or .kml file.'), _('Import'))
-    text = _('${import_link} a <em>GeoJSON</em> or <em>KML</em> file.', mapping={'import_link': link})
+           % (_('Provide a .geojson, .kml, or zipped .shp file.'), _('Import'))
+    text = _('${import_link} a <em>GeoJSON</em>, <em>KML</em>, or <em>zipped SHP</em> file.', mapping={'import_link': link})
 %>
     ${text|n}
     <span class="help-block">
@@ -91,7 +92,7 @@
         <input type="radio" name="type" value="grid" checked/>
         ${_('Square Grid')}
         <br>
-        <img src="${request.static_url('osmtm:static/img/project_creation_grid.png')}" width="150">
+        <img src="${request.static_path('osmtm:static/img/project_creation_grid.png')}" width="150">
         <p class="help-block">
         ${_('Area of interest is automatically split into grid cells. Each one is a task.')}<br>
         </p>
@@ -105,7 +106,7 @@
         <input type="radio" name="type" value="arbitrary" disabled />
         ${_('Arbitrary Geometries')}
         <br>
-        <img src="${request.static_url('osmtm:static/img/project_creation_arbitrary.png')}" width="150">
+        <img src="${request.static_path('osmtm:static/img/project_creation_arbitrary.png')}" width="150">
         <p class="help-block">
         ${_('Each polygon represents a task.')}<br>
         </p>
@@ -179,7 +180,7 @@
 <%
     text = _('A new project will be created with ${number} tasks.', mapping={'number': '<strong id="arbitrary_geometries_count"></strong>'})
 %>
-    ${text|n}    
+    ${text|n}
     <div class="form-actions pull-right">
       <a class="btn btn-default step3-back">
         <span class="glyphicon glyphicon-chevron-left"></span>

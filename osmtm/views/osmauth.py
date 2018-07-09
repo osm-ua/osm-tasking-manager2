@@ -25,13 +25,13 @@ CONSUMER_KEY = 'BOFkVgLDXTSMP6VHfiX8MQ'
 CONSUMER_SECRET = '4o4uLSqLWMciG2fE2zGncLcdewPNi9wU1To51Iz2E'
 
 # OSM oauth URLs
-BASE_URL = 'http://www.openstreetmap.org/oauth'
+BASE_URL = 'https://www.openstreetmap.org/oauth'
 REQUEST_TOKEN_URL = '%s/request_token' % BASE_URL
 ACCESS_TOKEN_URL = '%s/access_token' % BASE_URL
 AUTHORIZE_URL = '%s/authorize' % BASE_URL
 
 # OSM user details URL
-USER_DETAILS_URL = 'http://api.openstreetmap.org/api/0.6/user/details'
+USER_DETAILS_URL = 'https://api.openstreetmap.org/api/0.6/user/details'
 
 # an oauth consumer instance using our key and secret
 consumer = oauth.Consumer(CONSUMER_KEY, CONSUMER_SECRET)
@@ -93,14 +93,16 @@ def oauth_callback(request):  # pragma: no cover
         else:
             check_user_name(user)
 
-        if DBSession.query(User).filter(User.role == User.role_admin) \
+        # there's no admin in the database yet, let's create one
+        if DBSession.query(User) \
+                    .filter(User.role.op('&')(User.role_admin) == 1) \
                     .count() == 0:
             user = DBSession.query(User).get(id)
-            user.role = User.role_admin
+            user.role = User.role_admin + User.role_project_manager
 
         headers = remember(request, id, max_age=20 * 7 * 24 * 60 * 60)
 
-    location = session.get('came_from') or '/'
+    location = session.get('came_from') or request.route_path('home')
     # and redirect to the main page
     return HTTPFound(location=location, headers=headers)
 

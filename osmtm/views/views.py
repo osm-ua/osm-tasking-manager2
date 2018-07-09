@@ -4,9 +4,9 @@ from pyramid.httpexceptions import HTTPFound, HTTPUnauthorized
 import re
 import sqlalchemy
 from sqlalchemy import (
-    desc,
     or_,
     and_,
+    desc,
 )
 
 from ..models import (
@@ -14,6 +14,7 @@ from ..models import (
     Project,
     ProjectTranslation,
     User,
+    Label,
     TaskLock,
 )
 
@@ -38,14 +39,17 @@ def home(request):
     check_project_expiration()
 
     # no user in the DB yet
-    if DBSession.query(User).filter(User.role == User.role_admin) \
+    if DBSession.query(User).filter(User.role.op('&')(User.role_admin) == 1) \
                 .count() == 0:   # pragma: no cover
         request.override_renderer = 'start.mako'
         return dict(page_id="start")
 
     paginator = get_projects(request, 10)
 
-    return dict(page_id="home", paginator=paginator)
+    labels = DBSession.query(Label).all()
+    query_labels = extract_labels(request.params.get('labels', ''))
+    return dict(page_id="home", paginator=paginator, labels=labels,
+                query_labels=query_labels)
 
 
 @view_config(route_name='home_json', renderer='json')
@@ -56,6 +60,18 @@ def home_json(request):
     paginator = get_projects(request, 100)
     request.response.headerlist.append(('Access-Control-Allow-Origin', '*'))
     return FeatureCollection([project.to_feature() for project in paginator])
+
+
+def extract_labels(s):
+    label_regex = r"\"([^\"]+)\"|'([^']+)'|(\S+)"
+    matches = re.finditer(label_regex, s)
+
+    labels = []
+    for num, match in enumerate(matches):
+        '''We don't want the first group of the match since it's the full
+           text'''
+        labels.append([g for g in match.groups() if g is not None][0])
+    return labels
 
 
 def get_projects(request, items_per_page):
@@ -72,17 +88,29 @@ def get_projects(request, items_per_page):
 
     if not user:
         filter = Project.private == False  # noqa
-    elif not user.is_admin and not user.is_project_manager:
-        query = query.outerjoin(Project.allowed_users)
+    elif not user.is_project_manager:
         filter = or_(Project.private == False,  # noqa
-                     User.id == user_id)
+                     Project.allowed_users.any(User.id == user_id))
     else:
         filter = True  # make it work with an and_ filter
 
-    if not user or (not user.is_admin and not user.is_project_manager):
+    if not user or not user.is_project_manager:
         filter = and_(Project.status == Project.status_published, filter)
 
-    if 'search' in request.params:
+    if 'labels' in request.params:
+        labels = extract_labels(request.params.get('labels', ''))
+
+        if len(labels) > 0:
+            ids = DBSession.query(Project.id) \
+                      .filter(and_(*[Project.labels.any(name=label)
+                                     for label in labels])).all()
+            if len(ids) > 0:
+                filter = and_(Project.id.in_(ids), filter)
+            else:
+                # IN-predicate  with emty sequence can be expensive
+                filter = and_(False == True, filter)  # noqa
+
+    if request.params.get('search', '') != '':
         s = request.params.get('search')
         PT = ProjectTranslation
         search_filter = or_(PT.name.ilike('%%%s%%' % s),
@@ -102,7 +130,11 @@ def get_projects(request, items_per_page):
         ids = DBSession.query(ProjectTranslation.id) \
                        .filter(search_filter) \
                        .all()
-        filter = and_(Project.id.in_(ids), filter)
+        if len(ids) > 0:
+            filter = and_(Project.id.in_(ids), filter)
+        else:
+            # IN-predicate  with emty sequence can be expensive
+            filter = and_(False == True, filter)  # noqa
 
     # filter projects on which the current user worked on
     if request.params.get('my_projects', '') == 'on':
@@ -116,8 +148,17 @@ def get_projects(request, items_per_page):
             # IN-predicate  with emty sequence can be expensive
             filter = and_(False == True)  # noqa
 
+    if (request.params.get('show_archived', '') != 'on'):
+        filter = and_(Project.status != Project.status_archived, filter)
+
     sort_by = 'project.%s' % request.params.get('sort_by', 'priority')
+    if sort_by not in ['project.priority',
+                       'project.created',
+                       'project.last_update']:
+        sort_by = 'project.priority'
     direction = request.params.get('direction', 'asc')
+    if direction not in ['asc', 'desc']:
+        direction = 'asc'
     direction_func = getattr(sqlalchemy, direction, None)
     sort_by = direction_func(sort_by)
 
@@ -152,6 +193,11 @@ def user_prefered_language(request):
     request.response.set_cookie('_LOCALE_', value=language,
                                 max_age=20 * 7 * 24 * 60 * 60)
     return dict()
+
+
+@view_config(route_name="markdown_ref", renderer="markdown_ref.mako")
+def markdown_reference(request):
+    return dict(page_id="markdown_ref")
 
 
 @view_config(context='pyramid.httpexceptions.HTTPUnauthorized')

@@ -47,7 +47,7 @@ else:
   <div class="col-md-6">
   % if changeset_count != 'null':
   <p>
-    ${_('This user has submitted ${changes} total changesets.', mapping={'changes':changeset_count})}
+    ${ngettext('This user has submitted ${changes} total changeset.', 'This user has submitted ${changes} total changesets.', changeset_count, mapping={'changes':changeset_count})}
   </p>
   % endif
   </div>
@@ -70,18 +70,46 @@ else:
       </p>
 
       <p>
-      % if not contributor.is_admin:
-        % if contributor.is_project_manager:
+      % if contributor.is_project_manager:
+        <i class="glyphicon glyphicon-star user-project-manager"></i>
+        ${_("This user is a project manager.")}
+        % if user is not None and user.is_admin and user != contributor:
+          <a href="${request.route_path('user_project_manager', id=contributor.id)}">${_('Remove privileges')}</a>
+        % endif
+      % else:
+        % if user is not None and user.is_admin:
           <i class="glyphicon glyphicon-star user-project-manager"></i>
-          ${_("This user is a project manager.")}
-          % if user is not None and user.is_admin and user != contributor:
-            <a href="${request.route_path('user_project_manager', id=contributor.id)}">${_('Remove privileges')}</a>
-          % endif
-        % else:
-          % if user is not None and user.is_admin:
-            <i class="glyphicon glyphicon-star user-project-manager"></i>
-            <a href="${request.route_path('user_project_manager', id=contributor.id)}">${_('Set as project manager')}</a>
-          % endif
+          <a href="${request.route_path('user_project_manager', id=contributor.id)}">${_('Set as project manager')}</a>
+        % endif
+      % endif
+      </p>
+
+      <p>
+      % if contributor.is_validator:
+        <i class="glyphicon glyphicon-ok"></i>
+        ${_("This user is a validator.")}
+        % if user is not None and (user.is_admin or user.is_project_manager) and user != contributor:
+          <a href="${request.route_path('user_validator', id=contributor.id)}">${_('Remove privileges')}</a>
+        % endif
+      % else:
+        % if user is not None and (user.is_admin or user.is_project_manager):
+          <i class="glyphicon glyphicon-ok"></i>
+          <a href="${request.route_path('user_validator', id=contributor.id)}">${_('Set as validator')}</a>
+        % endif
+      % endif
+      </p>
+
+      <p>
+      % if contributor.is_experienced_mapper:
+        <i class="glyphicon glyphicon-ok"></i>
+        ${_("This user is an experienced mapper.")}
+        % if user is not None and (user.is_admin or user.is_project_manager) and user != contributor:
+          <a href="${request.route_path('user_experienced_mapper', id=contributor.id)}">${_('Remove privileges')}</a>
+        % endif
+      % else:
+        % if user is not None and (user.is_admin or user.is_project_manager):
+          <i class="glyphicon glyphicon-ok"></i>
+          <a href="${request.route_path('user_experienced_mapper', id=contributor.id)}">${_('Set as experienced mapper')}</a>
         % endif
       % endif
       </p>
@@ -99,9 +127,7 @@ else:
               title="${_('Project Details')}">
               #${p['project'].id} ${p["project"].name}
             </a>
-            (
-            ${_('${count} tiles', mapping={'count': p["count"]})}
-            )
+            (${ngettext('${count} tile', '${count} tiles', p['count'], mapping={'count': p['count']})})
             ${overpassturbo_link(p['project'])}
           </li>
         % endfor
@@ -125,6 +151,6 @@ query = u'<osm-script output="json" timeout="25"><union><query type="node"><user
 query = urllib.quote_plus(query.encode('utf8'))
 %>
 <small>
-  <a href="http://overpass-turbo.eu/map.html?Q=${query}" ><span class="glyphicon glyphicon-share-alt"></span> overpass-turbo</a>
+  <a href="http://overpass-turbo.eu/?Q=${query}&R" ><span class="glyphicon glyphicon-share-alt"></span> overpass turbo</a>
 </small>
 </%def>

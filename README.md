@@ -1,18 +1,18 @@
-# OpenStreetMap Tasking Manager
+# OpenStreetMap Tasking Manager v2
 
 [![Build Status](https://travis-ci.org/hotosm/osm-tasking-manager2.svg?branch=master)](https://travis-ci.org/hotosm/osm-tasking-manager2)
 [![Coverage Status](https://coveralls.io/repos/hotosm/osm-tasking-manager2/badge.png?branch=master)](https://coveralls.io/r/hotosm/osm-tasking-manager2?branch=master)
 
 ## About
 
-OSMTM enables collaborative work on specific areas in OpenStreetMap by defining
+OpenStreetMap Tasking Manager enables collaborative work on specific areas in OpenStreetMap by defining
 clear workflows to be achieved and by breaking tasks down into pieces.
 
-The application is written in Python using the Pyramid framework.
+This is version 2.0 of the Tasking Manager.
+**[Most development work is now taking place on version 3.0](https://github.com/hotosm/tasking-manager/)**
 
-This is the 2.0 version of the Tasking Manager.
-
-See a list of Tasking Manager installations [here](http://wiki.openstreetmap.org/wiki/OSM_Tasking_Manager#Operational_installations_of_the_Tasking_Manager).
+V2 Tasking Manager still powers [many Tasking Manager installations](https://wiki.openstreetmap.org/wiki/OSM_Tasking_Manager#Operational_installations_of_the_Tasking_Manager).
+It is written in Python using the Pyramid framework.
 
 ## Installation
 
@@ -27,14 +27,14 @@ To create a virtual Python environment:
     cd osm-tasking-manager2
     sudo easy_install virtualenv
     virtualenv --no-site-packages env
-    ./env/bin/python setup.py develop
+    ./env/bin/pip install -r requirements.txt
 
 *Tip: if you encounter problems installing `psycopg2` especially on Mac, it is recommended to follow advice proposed [here](http://stackoverflow.com/questions/22313407/clang-error-unknown-argument-mno-fused-madd-python-package-installation-fa).*
 
 ### Database
 
-OSMTM requires a PostgreSQL/PostGIS database. Version 2.x of PostGIS is
-required.
+OSMTM requires a PostgreSQL/PostGIS database. Version 2.3 or higher of PostGIS
+is required.
 
 First create a database user/role named `www-data`:
 
@@ -45,7 +45,7 @@ Then create a database named `osmtm`:
     sudo -u postgres createdb -T template0 osmtm -E UTF8 -O www-data
     sudo -u postgres psql -d osmtm -c "CREATE EXTENSION postgis;"
 
-### Local settings
+### Local settings
 
 You certainly will need some local specific settings, like the db user or
 password. For this, you can create a `local.ini` file in the project root,
@@ -54,10 +54,18 @@ For example:
 
     [app:main]
     sqlalchemy.url = postgresql://www-data:PASSWORD@localhost/osmtm
+    default_comment_prefix = #yourinstancename-project
+    check_expiration_interval = 60
 
 Note: you can also put your local settings file anywhere else on your
 file system, and then create a `LOCAL_SETTINGS_PATH` environment variable
 to make the project aware of this.
+
+Currently, these are the settings you can over-ride:
+
+ - `sqlalchemy.url`: Postgres URL to use for database connection
+ - `default_comment_prefix`: Default prefix to use for changeset comments, defaults to `#hotosm-project`
+ - `check_expiration_interval`: The interval at which the database should be checked for expired tasks, in seconds. Defaults to `5` seconds.
 
 ### Populate the database
 
@@ -81,12 +89,12 @@ You need to make the following changes to the osmtm/views/osmauth.py file.
     import httplib2
     httplib2.debuglevel = 4
     PROXY = httplib2.ProxyInfo(httplib2.socks.PROXY_TYPE_HTTP_NO_TUNNEL, 'PROXY-SERVER', PROXY-PORT)
-    
-NOTE: Replace the PROXY-SERVER with your proxy server address and PROXY-PORT with the port number on which your proxy is established. 
-    
-    # then add "proxy_info=PROXY" for every line in oauth.Client. 
+
+NOTE: Replace the PROXY-SERVER with your proxy server address and PROXY-PORT with the port number on which your proxy is established.
+
+    # then add "proxy_info=PROXY" for every line in oauth.Client.
     client = oauth.Client(consumer, proxy_info=PROXY)
-    
+
     client = oauth.Client(consumer, token, proxy_info=PROXY)
 
 Replace the host address in the development.ini file with your IP address of the system.
@@ -126,11 +134,11 @@ To run the tests, use the following command:
 ## Application deployment
 
 1. pull latest updates from the repository: `git pull origin`
-1. update the submodules: `git submodule update`
-1. update/install python modules: `python setup.py develop`
+1. update the submodules: `git submodule update --init`
+1. update/install python modules: `./env/bin/pip install -r requirements.txt`
 1. create database dump: `pg_dump -Fc -f osmtm2_latest.dmp database_name`
-1. run database migrations: `alembic upgrade head`
-1. compile messages: `python setup.py compile_catalog`
+1. run database migrations: `./env/bin/alembic upgrade head`
+1. compile messages: `./env/bin/python setup.py compile_catalog`
 1. restart application server
 
 ## Installation as a mod_wsgi Application
@@ -190,10 +198,10 @@ developed code that will become *current* once it gets deployed.
 
 In general managing translation files involves:
 
-* generate *pot* file: `python setup.py extract_messages`
-* initialize a message catalogue file (english): `python setup.py init_catalog -l en`
-  * if the catalogue is already created use: `python setup.py update_catalog`
-* eventually compile messages: `python setup.py compile_catalog`
+* generate *pot* file: `./env/bin/python setup.py extract_messages`
+* initialize a message catalogue file (english): `./env/bin/python setup.py init_catalog -l en`
+  * if the catalogue is already created use: `./env/bin/python setup.py update_catalog`
+* eventually compile messages: `./env/bin/python setup.py compile_catalog`
 * append new language to the `available_languages` configuration variable in *production.ini* file, for example `available_languages = en fr`
 
 ### Using Transifex service
@@ -238,8 +246,8 @@ Example `.transifexrc` file:
 #### Updating source files, locally and on the service
 
 * update pot and source po file
-  * `python setup.py extract_messages`
-  * `python setup.py init_catalog -l en`
+  * `./env/bin/python setup.py extract_messages`
+  * `./env/bin/python setup.py init_catalog -l en`
 
 * push the source file to Transifex service
   * `tx push -s`
@@ -252,4 +260,8 @@ Example `.transifexrc` file:
 * after there are some translation updates, pull latest changes for mapped resources
   * `tx pull -l fr,hr`
 * compile language files
-  * `python setup.py compile_catalog`
+  * `./env/bin/python setup.py compile_catalog`
+
+## API
+
+The tasking manager exposes some of its functionality via a RESTful API. It is documented on the following page: https://github.com/hotosm/osm-tasking-manager2/wiki/API.

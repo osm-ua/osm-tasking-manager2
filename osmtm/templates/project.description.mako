@@ -1,3 +1,4 @@
+<%namespace file="helpers.mako" name="helpers"/>
 <%
 from osmtm.mako_filters import markdown_filter
 %>
@@ -6,7 +7,7 @@ from osmtm.mako_filters import markdown_filter
   <span class="glyphicon glyphicon-warning-sign"></span>
   % if project.status == project.status_draft:
     ${_('This project is not published yet.')}
-    % if user and (user.is_project_manager or user.is_admin):
+    % if user and user.is_project_manager:
     <a href="${request.route_url('project_publish', project=project.id)}" class="pull-right">
       <span class="glyphicon glyphicon-share-alt"></span> ${_('Publish')}
     </a>
@@ -16,13 +17,14 @@ from osmtm.mako_filters import markdown_filter
   % endif
 </p>
 % endif
-% if project.private:
-<p class="text-muted">
-  <span class="glyphicon glyphicon-lock"></span>
-  ${_('Access to this project is limited')}
-</p>
-% endif
 <p>${project.description | markdown_filter, n}</p>
+<p>
+% for label in project.labels:
+${helpers.display_label(label)}
+% endfor
+<br>
+${helpers.display_project_info(project=project)}
+</p>
 <p class="text-center">
   <a class="btn btn-success btn-lg instructions">
     <span class="glyphicon glyphicon-share-alt"></span>&nbsp;

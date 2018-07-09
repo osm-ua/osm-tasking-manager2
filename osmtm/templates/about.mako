@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 <%inherit file="base.mako"/>
+<%namespace file="custom.mako" name="custom"/>
 
 <%block name="header"></%block>
 
@@ -9,11 +10,11 @@
     <div class="col-md-7">
       <h3>${_('About the Tasking Manager')}</h3>
       <p>
-      ${_('OSM Tasking Manager is a mapping tool designed and built for the Humanitarian OSM Team collaborative mapping. The purpose of the tool is to divide up a mapping job into smaller tasks that can be completed rapidly. It shows which areas need to be mapped and which areas need the mapping validated. <br />This approach facilitates the distribution of tasks to the various mappers in a context of emergency. It also permits to control the progress and the homogeneity of the work done (ie. Elements to cover, specific tags to use, etc.).')|n}
+      ${custom.about_tasking_manager_intro()}
       </p>
       <h3>${_('Sponsorship and Funding')}</h3>
       <p>${_('OSM Tasking Manager was designed and built for the <a href="http://hot.openstreetmap.org">Humanitarian OpenStreetMap Team</a>.') |n}
-      <img src="${request.static_url('osmtm:static/img/hot.png')}" />
+      <img src="${request.static_path('osmtm:static/img/hot.png')}" />
       <p>${_('With the invaluable help from:') | n}<p>
       <ul>
         <li>
@@ -34,11 +35,11 @@
       </ul>
       </p>
       <p>
-        <img src="${request.static_url('osmtm:static/img/aifdr.png')}" />
-        <img src="${request.static_url('osmtm:static/img/usaid.png')}" />
-        <img src="${request.static_url('osmtm:static/img/gfdrr.png')}" />
-        <img src="${request.static_url('osmtm:static/img/redcross.png')}" />
-        <img src="${request.static_url('osmtm:static/img/gwu.png')}" />
+        <img src="${request.static_path('osmtm:static/img/aifdr.png')}" />
+        <img src="${request.static_path('osmtm:static/img/usaid.png')}" />
+        <img src="${request.static_path('osmtm:static/img/gfdrr.png')}" />
+        <img src="${request.static_path('osmtm:static/img/redcross.png')}" />
+        <img src="${request.static_path('osmtm:static/img/gwu.png')}" />
       </p>
     </div>
     <div class="col-md-5">
@@ -60,16 +61,9 @@
         ${_('Lead developer: Pierre GIRAUD (<a href="//www.camptocamp.com">Camptocamp</a>)')|n}
         ${_('with the help of <a href="https://github.com/hotosm/osm-tasking-manager2/graphs/contributors">other contributors</a>.') |n}
       </p>
-<%
-      from gitversion import determine_git_version
-      
-      ver = determine_git_version('.')
-      url = 'https://github.com/hotosm/osm-tasking-manager2/commit/' + ver.rsplit('.',1)[1]
-      txt = '<a href="%s">%s</a>' % (url, ver)
-%>
       <h3>${_('Version')}</h3>
       <p>
-        ${txt |n}
+        ${request.registry.settings['version']}
       </p>
     </div>
   </div>

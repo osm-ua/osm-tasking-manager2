@@ -8,11 +8,14 @@ from osmtm.models import (
     Base,
     User,
     License,
+    Label,
     Area,
     Project,
     DBSession,
 )
 from sqlalchemy_i18n.manager import translation_manager
+
+from pyramid import testing
 
 local_settings_path = 'local.test.ini'
 
@@ -24,6 +27,8 @@ USER1_ID = 1
 USER2_ID = 2
 ADMIN_USER_ID = 3
 PROJECT_MANAGER_USER_ID = 4
+VALIDATOR_ID = 5
+EXPERIENCED_MAPPER_ID = 6
 
 translation_manager.options.update({
     'locales': ['en', 'fr'],
@@ -35,13 +40,13 @@ def populate_db():
     import geoalchemy2
     import shapely
 
+    testing.setUp()
     config = ConfigParser.ConfigParser()
     config.read(local_settings_path)
     db_url = config.get('app:main', 'sqlalchemy.url')
     engine = create_engine(db_url)
     Base.metadata.drop_all(engine)
     Base.metadata.create_all(engine)
-
     DBSession.configure(bind=engine)
 
     # those users are immutables ie. they're not suppose to change during tests
@@ -59,24 +64,45 @@ def populate_db():
     user.role = User.role_project_manager
     DBSession.add(user)
 
+    user = User(VALIDATOR_ID, u'user_validator')
+    user.role = User.role_validator
+    DBSession.add(user)
+
+    user = User(EXPERIENCED_MAPPER_ID, u'user_experienced_mapper')
+    user.role = User.role_experienced_mapper
+    DBSession.add(user)
+
     license = License()
     license.name = u'LicenseBar'
     license.description = u'the_description_for_license_bar'
     license.plain_text = u'the_plain_text_for_license_bar'
     DBSession.add(license)
 
+    label0 = Label()
+    label0.name = u'bar'
+    label0.color = u'#ff0000'
+    DBSession.add(label0)
+
+    label1 = Label()
+    label1.name = u'dude label'
+    label1.color = u'#ff0000'
+    DBSession.add(label1)
+
     shape = shapely.geometry.Polygon(
         [(7.23, 41.25), (7.23, 41.12), (7.41, 41.20)])
     geometry = geoalchemy2.shape.from_shape(shape, 4326)
     area = Area(geometry)
     project = Project(u'test project')
+    project.short_description = u'lorem ipsum description'
     project.area = area
     project.auto_fill(12)
     project.status = Project.status_published
+    project.labels = [label0, label1]
     DBSession.add(project)
 
     transaction.commit()
     DBSession.remove()
+
 
 populate_db()
 
@@ -87,10 +113,12 @@ class BaseTestCase(unittest.TestCase):
     user2_id = USER2_ID
     admin_user_id = ADMIN_USER_ID
     project_manager_user_id = PROJECT_MANAGER_USER_ID
+    validator_user_id = VALIDATOR_ID
 
     def setUp(self):
         from osmtm import main
         from webtest import TestApp
+        self.config = testing.setUp()
         settings = {
             'available_languages': 'en fr',
             'available_languages_full': 'English, Français',
@@ -104,7 +132,7 @@ class BaseTestCase(unittest.TestCase):
         from osmtm.models import DBSession
         DBSession.bind.dispose()  # dispose engine
         DBSession.remove()
-
+        testing.tearDown()
         # forget any remembered authentication
         self.__forget()
 
@@ -119,6 +147,9 @@ class BaseTestCase(unittest.TestCase):
 
     def login_as_user2(self):
         return self.__remember(self.user2_id)
+
+    def login_as_validator(self):
+        return self.__remember(self.validator_user_id)
 
     def login_as_user(self, user_id):
         return self.__remember(user_id)

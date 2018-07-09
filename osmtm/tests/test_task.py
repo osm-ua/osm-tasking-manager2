@@ -125,6 +125,9 @@ class TestTaskFunctional(BaseTestCase):
 
     def test_task_comment__with_mention(self):
         from osmtm.models import Message, DBSession
+        messages_bef = DBSession.query(Message) \
+                                .filter(Message.to_user_id == self.user2_id) \
+                                .all()
         headers = self.login_as_user1()
         res = self.testapp.get('/project/1/task/3/comment', status=200,
                                headers=headers,
@@ -134,13 +137,63 @@ class TestTaskFunctional(BaseTestCase):
                                xhr=True)
         self.assertTrue(res.json['success'])
 
-        messages = DBSession.query(Message) \
-                            .filter(Message.to_user_id == self.user2_id).all()
-        self.assertEqual(len(messages), 1)
+        messages_aft = DBSession.query(Message) \
+                                .filter(Message.to_user_id == self.user2_id) \
+                                .all()
+        self.assertEqual(len(messages_aft), (len(messages_bef) + 1))
 
         res = self.testapp.get('/project/1/task/3', status=200, xhr=True)
         # confirm that the convert_mention filter is correctly called
         self.assertTrue('<a href="/user/user2">@user2</a>' in res)
+
+    def test_task_invalidation__msg(self):
+        from osmtm.models import Message, DBSession
+
+        user1_before_msgs = DBSession.query(Message) \
+            .filter(Message.to_user_id == self.user1_id).all()
+
+        user2_before_msgs = DBSession.query(Message) \
+            .filter(Message.to_user_id == self.user2_id).all()
+
+        headers = self.login_as_user1()
+        self.testapp.get('/project/1/task/5/lock',
+                         headers=headers,
+                         xhr=True)
+        self.testapp.get('/project/1/task/5/done', status=200,
+                         headers=headers,
+                         xhr=True)
+
+        headers = self.login_as_user2()
+        self.testapp.get('/project/1/task/5/lock',
+                         headers=headers,
+                         xhr=True)
+        self.testapp.get('/project/1/task/5/validate', status=200,
+                         params={
+                             'comment': 'a comment',
+                             'validate': True
+                         },
+                         headers=headers,
+                         xhr=True)
+
+        headers = self.login_as_project_manager()
+        self.testapp.get('/project/1/task/5/lock',
+                         headers=headers,
+                         xhr=True)
+        self.testapp.get('/project/1/task/5/validate', status=200,
+                         params={
+                             'comment': 'a comment',
+                             'invalidate': True
+                         },
+                         headers=headers,
+                         xhr=True)
+
+        user1_after_msgs = DBSession.query(Message) \
+            .filter(Message.to_user_id == self.user1_id).all()
+        user2_after_msgs = DBSession.query(Message) \
+            .filter(Message.to_user_id == self.user2_id).all()
+
+        self.assertEqual(len(user1_after_msgs), (len(user1_before_msgs) + 1))
+        self.assertEqual(len(user2_after_msgs), (len(user2_before_msgs) + 1))
 
     def test_task_invalidate(self):
         headers = self.login_as_user1()
@@ -180,6 +233,107 @@ class TestTaskFunctional(BaseTestCase):
                          params={'validate': True},
                          headers=headers,
                          xhr=True)
+
+    def test_task_validate_roles(self):
+        import transaction
+        from osmtm.models import Project, DBSession
+
+        headers = self.login_as_user1()
+        self.testapp.get('/project/1/task/8/lock', headers=headers, xhr=True)
+        self.testapp.get('/project/1/task/8/done', headers=headers, xhr=True)
+
+        headers = self.login_as_validator()
+        resp = self.testapp.get('/project/1/task/8', headers=headers, xhr=True)
+        self.assertTrue('Review the work' in resp.body)
+
+        headers = self.login_as_user2()
+        resp = self.testapp.get('/project/1/task/8', headers=headers, xhr=True)
+        self.assertTrue('Review the work' in resp.body)
+
+        project = DBSession.query(Project).get(1)
+        project.requires_validator_role = True
+        DBSession.add(project)
+        DBSession.flush()
+        transaction.commit()
+
+        headers = self.login_as_validator()
+        resp = self.testapp.get('/project/1/task/8', headers=headers, xhr=True)
+        self.assertTrue('Review the work' in resp.body)
+
+        headers = self.login_as_user2()
+        resp = self.testapp.get('/project/1/task/8', headers=headers, xhr=True)
+        self.assertFalse('Review the work' in resp.body)
+        resp = self.testapp.get('/project/1/task/8/lock',
+                                headers=headers, xhr=True)
+        self.assertFalse(resp.json['success'])
+
+        project = DBSession.query(Project).get(1)
+        project.requires_validator_role = False
+        DBSession.add(project)
+        DBSession.flush()
+        transaction.commit()
+
+    def test_task_cancel_done(self):
+        headers = self.login_as_user1()
+        self.testapp.get('/project/1/task/3/lock',
+                         headers=headers,
+                         xhr=True)
+        self.testapp.get('/project/1/task/3/done', status=200,
+                         headers=headers,
+                         xhr=True)
+
+        ''' User is proposed to cancel the work on the task he just marked
+            as done '''
+        resp = self.testapp.get('/project/1/task/3', headers=headers, xhr=True)
+        self.assertTrue('cancel_done' in resp.body)
+
+        ''' Other users are not proposed to continue '''
+        headers = self.login_as_user2()
+        resp = self.testapp.get('/project/1/task/3', headers=headers, xhr=True)
+        self.assertFalse('cancel_done' in resp.body)
+
+        ''' If task has been locked by an other user, we should receive an
+            error '''
+        headers = self.login_as_user2()
+        self.testapp.get('/project/1/task/3/lock', headers=headers, xhr=True)
+        headers = self.login_as_user1()
+        resp = self.testapp.get('/project/1/task/3/cancel_done', status=200,
+                                params={'comment': 'mistake'},
+                                headers=headers,
+                                xhr=True)
+        self.assertFalse(resp.json['success'])
+        headers = self.login_as_user2()
+        self.testapp.get('/project/1/task/3/unlock', status=200,
+                         headers=headers,
+                         xhr=True)
+
+        headers = self.login_as_user1()
+        self.testapp.get('/project/1/task/3/cancel_done', status=200,
+                         params={'comment': 'mistake'},
+                         headers=headers,
+                         xhr=True)
+
+    def test_task_cancel_done__not_last_contributor(self):
+        headers = self.login_as_user1()
+        self.testapp.get('/project/1/task/3/lock', headers=headers, xhr=True)
+        self.testapp.get('/project/1/task/3/done', headers=headers, xhr=True)
+
+        headers = self.login_as_user2()
+        self.testapp.get('/project/1/task/3/lock', headers=headers, xhr=True)
+        resp = self.testapp.get('/project/1/task/3/validate',
+                                params={'invalidate': True},
+                                headers=headers,
+                                xhr=True)
+        self.testapp.get('/project/1/task/3/lock', headers=headers, xhr=True)
+        self.testapp.get('/project/1/task/3/done', headers=headers, xhr=True)
+
+        ''' User contributed on the task but someone else marked it as done by
+            then '''
+        headers = self.login_as_user1()
+        resp = self.testapp.get('/project/1/task/3/cancel_done',
+                                headers=headers,
+                                xhr=True)
+        self.assertFalse(resp.json['success'])
 
     def test_task_split(self):
         headers = self.login_as_user1()

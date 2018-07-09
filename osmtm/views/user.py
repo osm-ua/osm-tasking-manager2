@@ -28,27 +28,19 @@ from xml.dom import minidom
 
 @view_config(route_name='users', renderer='users.mako')
 def users(request):
-    users = DBSession.query(User).all()
-    users.sort(key=lambda user: user.username)
-    users.sort(key=lambda user:
-               user.is_admin or user.is_project_manager, reverse=True)
+
+    users = DBSession.query(User).order_by(User.username)
+
+    roles = [int(role) for role in request.params.getall('role')]
+    if len(roles):
+        for role in roles:
+            users = users.filter(User.role.op('&')(role) != 0)
 
     page = int(request.params.get('page', 1))
     page_url = PageURL_WebOb(request)
     paginator = Page(users, page, url=page_url, items_per_page=40)
 
-    return dict(page_id="users", users=users, paginator=paginator)
-
-
-@view_config(route_name='users_json', renderer='json')
-def users_json(request):
-    query = DBSession.query(User).order_by(User.username)
-
-    if 'q' in request.params:
-        q = request.params.get('q')
-        query = query.filter(User.username.ilike('%' + q + '%')).limit(10)
-
-    return [u.username for u in query.all()]
+    return dict(page_id="users", paginator=paginator)
 
 
 @view_config(route_name='user_messages', http_cache=0,
@@ -77,7 +69,7 @@ def user_admin(request):
         raise HTTPBadRequest(
             _('You probably don\'t want to remove your privileges'))
 
-    user.role = User.role_admin if not user.is_admin else None
+    user.role ^= User.role_admin
     DBSession.flush()
 
     return HTTPFound(location=route_path("user", request,
@@ -89,8 +81,31 @@ def user_project_manager(request):
     id = request.matchdict['id']
     user = DBSession.query(User).get(id)
 
-    user.role = User.role_project_manager if not user.is_project_manager  \
-        else None
+    user.role ^= User.role_project_manager
+    DBSession.flush()
+
+    return HTTPFound(location=route_path("user", request,
+                                         username=user.username))
+
+
+@view_config(route_name='user_validator', permission="user_edit")
+def user_validator(request):
+    id = request.matchdict['id']
+    user = DBSession.query(User).get(id)
+
+    user.role ^= User.role_validator
+    DBSession.flush()
+
+    return HTTPFound(location=route_path("user", request,
+                                         username=user.username))
+
+
+@view_config(route_name='user_experienced_mapper', permission="user_edit")
+def user_experienced_mapper(request):
+    id = request.matchdict['id']
+    user = DBSession.query(User).get(id)
+
+    user.role ^= User.role_experienced_mapper
     DBSession.flush()
 
     return HTTPFound(location=route_path("user", request,
@@ -148,7 +163,7 @@ def check_user_name(user):
             user.username = display_name
             DBSession.add(user)
             DBSession.flush()
-    except:
+    except Exception:
         # don't lock application if no response can be received from OSM API
         pass
 
@@ -174,7 +189,7 @@ def get_addl_user_info(user_id):
         changesets_el = xmldoc.getElementsByTagName('changesets')[0]
         changeset_count = changesets_el.getAttribute('count')
 
-    except:
+    except Exception:
         # don't lock application if no reponse can be received from OSM API
         creation_date = 'null'
         changeset_count = 'null'

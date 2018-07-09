@@ -1,7 +1,7 @@
 <script type="text/javascript">
   var assigned_to = "${task.assigned_to.username if task.assigned_to else ''}";
 </script>
-% if user and (user.is_project_manager or user.is_admin):
+% if user and user.is_project_manager:
   <div>
     ${assigned_to_container()}
     % if not task.cur_lock or not task.cur_lock.lock:
@@ -11,7 +11,7 @@
     </a>
     % endif
   </div>
-  <script type="text/javascript" src="${request.static_url('osmtm:static/js/task.assign.js')}"></script>
+  <script type="text/javascript" src="${request.static_path('osmtm:static/js/task.assign.js')}"></script>
   <div id="assign_to_selector" class="panel panel-default hide">
     <div class="panel-heading small">
       <strong>

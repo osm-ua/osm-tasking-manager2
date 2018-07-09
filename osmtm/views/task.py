@@ -23,6 +23,7 @@ from geoalchemy2 import (
 
 from sqlalchemy.orm import (
     joinedload,
+    aliased,
 )
 
 from sqlalchemy.orm.exc import NoResultFound
@@ -30,6 +31,7 @@ from sqlalchemy.exc import OperationalError
 from sqlalchemy.sql.expression import (
     not_,
     and_,
+    or_,
 )
 
 from pyramid.security import authenticated_userid
@@ -96,6 +98,32 @@ def __ensure_task_locked(request, task, user):
         raise HTTPForbidden(_("You need to lock the task first."))
 
 
+def get_task_ancestors(task_id, project_id):
+
+    # get ids of all tasks that are ancestors of the current one
+    ancestors = DBSession.query(
+        Task.id,
+        Task.parent_id,
+        Task.project_id
+    ).filter(
+        Task.id == task_id,
+        Task.project_id == project_id
+    ).cte(name="ancestors", recursive=True)
+
+    ancestors_alias = aliased(ancestors)
+
+    ancestors = ancestors.union_all(
+        DBSession.query(
+            Task.id, Task.parent_id, Task.project_id
+        ).filter(
+            Task.id == ancestors_alias.c.parent_id,
+            Task.project_id == ancestors_alias.c.project_id,
+        )
+    )
+
+    return DBSession.query(ancestors.c.id).distinct()
+
+
 @view_config(route_name='task_xhr', renderer='task.mako', http_cache=0)
 def task_xhr(request):
     user = __get_user(request, allow_none=True)
@@ -106,21 +134,31 @@ def task_xhr(request):
     task_id = request.matchdict['task']
     project_id = request.matchdict['project']
 
-    filter = and_(TaskState.task_id == task_id,
-                  TaskState.project_id == project_id)
+    ancestors = get_task_ancestors(task_id, project_id)
+
+    filter = and_(and_(TaskState.task_id.in_(ancestors),
+                  TaskState.project_id == project_id),
+                  TaskState.state != TaskState.state_ready)
     states = DBSession.query(TaskState).filter(filter) \
         .order_by(TaskState.date).all()
-    # remove the first state (task creation with state==ready)
-    states.pop(0)
 
-    filter = and_(TaskLock.task_id == task_id,
-                  TaskLock.project_id == project_id)
-    locks = DBSession.query(TaskLock).filter(filter) \
-        .order_by(TaskLock.date).all()
-    # remove the first lock (task creation)
-    locks.pop(0)
+    filter = and_(
+        TaskLock.task_id.in_(ancestors),
+        TaskLock.project_id == project_id,
+        TaskLock.lock != None  # noqa
+    )
+    locks_query = DBSession.query(TaskLock).filter(filter) \
+        .order_by(TaskLock.date)
+    # store the locks in order to be able to remove the unlocks after duration
+    # computation without removing them from database
+    locks = [lock for lock in locks_query]
+    for index, lock in enumerate(locks):
+        if not lock.lock:
+            prev_lock = locks[index - 1]
+            prev_lock.duration = lock.date - prev_lock.date
+            locks.remove(lock)
 
-    filter = and_(TaskComment.task_id == task_id,
+    filter = and_(TaskComment.task_id.in_(ancestors),
                   TaskComment.project_id == project_id)
     comments = DBSession.query(TaskComment).filter(filter) \
         .order_by(TaskComment.date).all()
@@ -160,7 +198,7 @@ def done(request):
     DBSession.flush()
 
     _ = request.translate
-    return dict(success=True,
+    return dict(success=True, task=dict(id=task.id),
                 msg=_("Task marked as done. Thanks for your contribution"))
 
 
@@ -187,6 +225,15 @@ def lock(request):
         return dict(success=False,
                     task=dict(id=task.id),
                     error_msg=_("Task assigned to someone else."))
+
+    if task.cur_state and \
+       task.cur_state.state == TaskState.state_done and \
+       task.project.requires_validator_role and \
+       user.role & user.role_validator == 0:
+        return dict(success=False,
+                    task=dict(id=task.id),
+                    error_msg=_("You don't have enough permissions to review"
+                                " the work."))
 
     task.locks.append(TaskLock(user=user, lock=True))
     DBSession.add(task)
@@ -267,24 +314,29 @@ def send_message(subject, from_, to_, msg):
 
 
 def send_invalidation_message(request, task, user):
+    """Sends message to contributors of invalidated tasks."""
     comment = request.params.get('comment', '')
 
     states = sorted(task.states, key=lambda state: state.date, reverse=True)
 
-    to = None
+    recipients = set()
+
     for state in states:
-        if state.state == TaskState.state_done:
-            to = state.user
-            break
+        if (state.state == TaskState.state_validated or
+                state.state == TaskState.state_done):
+            recipients.add(state.user)
 
     from_ = user
-    if from_ != to:
-        _ = request.translate
-        href = request.route_path('project', project=task.project_id)
-        href = href + '#task/%s' % task.id
-        link = '<a href="%s">#%d</a>' % (href, task.id)
-        subject = _('Task ${link} invalidated', mapping={'link': link})
-        send_message(subject, from_, to, comment)
+
+    while recipients:
+        to = recipients.pop()
+        if from_ != to:
+            _ = request.translate
+            href = request.route_path('project', project=task.project_id)
+            href = href + '#task/%s' % task.id
+            link = '<a href="%s">#%d</a>' % (href, task.id)
+            subject = _('Task ${link} invalidated', mapping={'link': link})
+            send_message(subject, from_, to, comment)
 
 
 @view_config(route_name='task_validate', renderer="json")
@@ -314,6 +366,33 @@ def validate(request):
     return dict(success=True, msg=msg)
 
 
+@view_config(route_name='task_cancel_done', renderer='json')
+def cancel_done(request):
+    _ = request.translate
+
+    user = __get_user(request)
+    task = __get_task(request, lock_for_update=True)
+
+    ''' Ensure that task is not currently locked by someone else '''
+    if task.cur_lock.lock:
+        return dict(success=False, msg=_("Task is locked by someone else"),
+                    task=dict(id=task.id))
+
+    ''' Only the last contributor of the task can cancel '''
+    if task.cur_state.user != user:
+        return dict(success=False, task=dict(id=task.id))
+
+    ''' Change the done state to ready '''
+    ''' We could remove the done state but then the map doesn't reload
+        automatically '''
+    task.cur_state.date = datetime.datetime.utcnow()
+    task.cur_state.state = TaskState.state_ready
+    DBSession.add(task)
+    DBSession.flush()
+
+    return dict(success=True, task=dict(id=task.id))
+
+
 @view_config(route_name='task_split', renderer='json')
 def split(request):
     user = __get_user(request)
@@ -329,6 +408,7 @@ def split(request):
                      int(task.y) * 2 + j,
                      int(task.zoom) + 1)
             t.project = task.project
+            t.parent_id = task.id
             t.update = datetime.datetime.utcnow()
 
     task.states.append(TaskState(user=user, state=TaskState.state_removed))
@@ -362,9 +442,11 @@ def get_assigned_tasks(project_id, user):
 
 
 def find_matching_task(project_id, filter):
+    state_filter = or_(Task.cur_state.has(state=TaskState.state_ready),
+                       Task.cur_state.has(state=TaskState.state_invalidated))
     query = DBSession.query(Task) \
         .filter_by(project_id=project_id) \
-        .filter(Task.cur_state.has(state=TaskState.state_ready)) \
+        .filter(state_filter) \
         .filter(not_(Task.cur_lock.has(lock=True)))
 
     query = query.filter(filter)

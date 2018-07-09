@@ -1,12 +1,13 @@
 # -*- coding: utf-8 -*-
 <%inherit file="base.mako"/>
+<%namespace file="helpers.mako" name="helpers"/>
 <%block name="header">
 <h1>${project.id} - ${project.name} - ${_('Edit')}</h1>
 </%block>
 <%block name="content">
-<link rel="stylesheet" href="${request.static_url('osmtm:static/js/lib/datepicker3.css')}">
-<script type="text/javascript" src="${request.static_url('osmtm:static/js/lib/angular.min.js')}"></script>
-<script type="text/javascript" src="${request.static_url('osmtm:static/js/lib/bootstrap-datepicker.js')}"></script>
+<link rel="stylesheet" href="${request.static_path('osmtm:static/js/lib/datepicker3.css')}">
+<script type="text/javascript" src="${request.static_path('osmtm:static/js/lib/angular.min.js')}"></script>
+<script type="text/javascript" src="${request.static_path('osmtm:static/js/lib/bootstrap-datepicker.js')}"></script>
 <script>
     var locale_name = "${request.locale_name}";
 </script>
@@ -14,17 +15,18 @@
 <%
   bootstrap_locale_baseurl = 'osmtm:static/js/lib/locales/bootstrap-datepicker.%s.js'
   try:
-    bootstrap_locale = request.static_url(bootstrap_locale_baseurl % request.locale_name.replace('_', '-'))
+    bootstrap_locale = request.static_path(bootstrap_locale_baseurl % request.locale_name.replace('_', '-'))
   except IOError:
-    bootstrap_locale = request.static_url(bootstrap_locale_baseurl % request.locale_name[:2])
-  except IOError:
-    bootstrap_locale = request.static_url(bootstrap_locale_baseurl % 'en')
+    try:
+      bootstrap_locale = request.static_path(bootstrap_locale_baseurl % request.locale_name[:2])
+    except IOError:
+      bootstrap_locale = request.static_path(bootstrap_locale_baseurl % 'en')
 %>
 <script type="text/javascript" src="${bootstrap_locale}"></script>
 
-<link rel="stylesheet" href="${request.static_url('osmtm:static/js/lib/Leaflet.draw/dist/leaflet.draw.css')}"/>
-<script src="${request.static_url('osmtm:static/js/lib/leaflet.js')}"></script>
-<script src="${request.static_url('osmtm:static/js/lib/Leaflet.draw/dist/leaflet.draw.js')}"></script>
+<link rel="stylesheet" href="${request.static_path('osmtm:static/js/lib/Leaflet.draw/dist/leaflet.draw.css')}"/>
+<script src="${request.static_path('osmtm:static/js/lib/leaflet.js')}"></script>
+<script src="${request.static_path('osmtm:static/js/lib/Leaflet.draw/dist/leaflet.draw.js')}"></script>
 <div id="markdown_cheat_sheet" class="modal fade">
   <div class="modal-dialog">
   <div class="modal-content">
@@ -36,8 +38,85 @@
   </div>
   </div>
 </div>
+
+<!-- Modal -->
+<div class="modal fade" id="invalidateAllModal" tabindex="-1" role="dialog" aria-labelledby="invalidateAll">
+  <div class="modal-dialog modal-sm" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+        <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+        <h4 class="modal-title" id="myModalLabel">${_('Are you sure?')}</h4>
+      </div>
+      <div class="modal-body">
+        <p>
+          ${_("This will mark all tasks currently marked as 'done' as invalid. Please use this only if you are sure of what you are doing.")}
+        </p>
+        <p>
+          ${_('Please leave a comment. It will be displayed in all the invalidated tasks.')}
+        </p>
+        <p>
+          <textarea id="project_invalidate_comment" name="invalidate_all_comment" class="form-control" placeholder="${_('This will be sent as the invalidation comment to users.')}" rows="2"></textarea>
+        </p>
+        <p>
+          ${_('Please type in the project number id of the repository to confirm.')}
+        </p>
+        <p class="form-group">
+          <input id="project_invalidate_challenge_id" class="input form-control" />
+        </p>
+        <p class="errors"></p>
+        <div class="text-center">
+          <a class="btn btn-danger btn-invalidate-all">
+             <span class="glyphicon glyphicon-share-alt"></span>&nbsp;
+             ${_('Invalidate all done tasks')}
+          </a>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+<!-- Message Modal -->
+<div class="modal fade" id="messageAllModal" tabindex="-1" role="dialog" aria-labelledby="messageAll">
+  <div class="modal-dialog modal-md" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+        <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+        <h4 class="modal-title" id="myModalLabel">${_('Message all contributors')}</h4>
+      </div>
+      <div class="modal-body">
+        <p>
+          ${_("This will send a Tasking Manager message to every contributor of the current project.")}
+        </p>
+        <p class="text-warning">
+          ${_("Please use this feature conservatively.")}
+        </p>
+        <hr>
+        <p class="form-group">
+          <input id="message_all_subject" class="input form-control" placeholder="${_('Subject')}"/>
+        </p>
+        <p>
+          <textarea id="message_all_message" name="message_all_message" class="form-control" placeholder="${_('Message')}" rows="6"></textarea>
+          <p class="help-block">
+            ${_('This message does not automatically translate, so you may want to include your own translations.')}
+          </p>
+        </p>
+        <p class="errors text-danger"></p>
+      </div>
+      <div class="modal-footer">
+        <div class="text-right">
+          <a class="btn btn-default" data-dismiss="modal" aria-label="Close">
+            ${_('Cancel')}
+          </a>
+          <a class="btn btn-primary btn-message-all">
+             ${_('Message all contributors')}
+          </a>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
 <script>
-  var converter = new Showdown.converter();
+  var converter = new showdown.Converter({extensions: ['youtube']});
   var project_id = ${project.id};
 <%
 from shapely.wkb import loads
@@ -57,7 +136,8 @@ geometry = loads(str(project.area.geometry.data))
           <li><a href="#area" data-toggle="tab">${_('Area')}</a></li>
           <li><a href="#imagery" data-toggle="tab">${_('Imagery')}</a></li>
           <li><a id="priority_areas_tab" href="#priority_areas" data-toggle="tab">${_('Priority Areas')}</a></li>
-          <li><a href="#allowed_users" data-toggle="tab">${_('Allowed Users')}</a></li>
+          <li><a href="#permissions" data-toggle="tab">${_('Permissions')}</a></li>
+          <li><a href="#labels" data-toggle="tab">${_('Labels')}</a></li>
           <li><a href="#misc" data-toggle="tab">${_('Misc')}</a></li>
         </ul>
         <div class="tab-content">
@@ -76,8 +156,11 @@ geometry = loads(str(project.area.geometry.data))
           <div class="tab-pane" id="priority_areas">
             ${priority_areas_()}
           </div>
-          <div class="tab-pane" id="allowed_users">
-            ${allowed_users()}
+          <div class="tab-pane" id="permissions">
+            ${permissions()}
+          </div>
+          <div class="tab-pane" id="labels">
+            ${labels_()}
           </div>
           <div class="tab-pane" id="misc">
             ${misc()}
@@ -93,8 +176,8 @@ geometry = loads(str(project.area.geometry.data))
       </div>
     </div>
   </form>
-  <script type="text/javascript" src="${request.static_url('osmtm:static/js/project.edit.js')}"></script>
-  <script src="${request.static_url('osmtm:static/js/lib/typeahead.bundle.js')}"></script>
+  <script type="text/javascript" src="${request.static_path('osmtm:static/js/project.edit.js')}"></script>
+  <script src="${request.static_path('osmtm:static/js/lib/typeahead.bundle.js')}"></script>
 </div>
 </%block>
 <%block name="description">
@@ -140,7 +223,7 @@ geometry = loads(str(project.area.geometry.data))
         <div class="form-group">
           <label for="id_name" class="control-label">${_('Name of the project')}
           </label>
-          ${locale_chooser(inputname='name')}
+          ${helpers.locale_chooser(inputname='name')}
           <div class="tab-content">
             % for locale, translation in translations:
             <div id="tab_name_${locale}"
@@ -164,7 +247,7 @@ geometry = loads(str(project.area.geometry.data))
           <label for="id_short_description" class="control-label">
             ${_('Short Description')}
           </label>
-          ${locale_chooser(inputname='short_description')}
+          ${helpers.locale_chooser(inputname='short_description')}
           <div class="tab-content">
             % for locale, translation in translations:
               <div id="short_description_${locale}"
@@ -214,8 +297,9 @@ geometry = loads(str(project.area.geometry.data))
              class="form-control"
              value="${project.changeset_comment if project.changeset_comment is not None else ''}"/>
       <span class="help-block">
-        ${_('Comments users are recommended to add to upload commits.')}<br />
-        ${_('For example:')}<em> "${_('Guinea, #hotosm-guinea-project-470, source=Pleiades, CNES, Astrium')}"</code></em>
+        ${_('Default comments added to uploaded changeset comment field. Users should also be encouraged add text describing what they mapped.')}<br />
+        ${_('Example defaults:')}<em> " #hotosm-guinea-project-470 #missingmaps "</em><br />
+        ${_('Hashtags are sometimes used for analysis later, but should be human informative and not overused, #group #event for example.')}
       </span>
     </div>
 
@@ -242,8 +326,12 @@ geometry = loads(str(project.area.geometry.data))
           ${textarea_with_preview(inputname='per_task_instructions')}
 
           <span class="help-block col-md-9">
+          % if project.zoom:
             ${_('Put here anything that can be useful to users while taking a task. {x}, {y} and {z} will be replaced by the corresponding parameters for each task.')}<br />
-            ${_('For example:')}<em> ${_('" This task involves loading extra data. Click [here](http://localhost:8111/import?new_layer=true&url=http://www.domain.com/data/{x}/{y}/{z}/routes_2009.osm) to load the data into JOSM')}"</em>
+            ${_('For example:')} « <em>${_('This task involves loading extra data. Click [here](http://localhost:8111/import?new_layer=true&url=http://www.domain.com/data/{x}/{y}/{z}/routes_2009.osm) to load the data into JOSM')}</em> ».
+          % else:
+            ${_('Put here anything that can be useful to users while taking a task. If you have added extra properties within the GeoJSON of the task, they can be referenced by surrounding them in curly braces. For eg. if you have a property called "import_url" in your GeoJSON, you can reference it like:')} « <em>${_('This task involves loading extra data. Click [here](http://localhost:8111/import?new_layer=true&url={import_url}) to load the data into JOSM')}</em> ».
+          % endif
           </span>
         </div>
       </div>
@@ -263,7 +351,10 @@ geometry = loads(str(project.area.geometry.data))
 <div class="row">
   <div class="col-md-4">
     <label>
-      ${_('${count_of} priority area(s)', mapping={'count_of': len(project.priority_areas)})}
+      <%
+        count = len(project.priority_areas)
+      %>
+      ${ngettext('${count} priority area', '${count} priority areas', count, mapping={'count': count})}
     </label>
     <div class="help-block">
     ${_('If you want mappers to work on the highest priority areas first, draw one or more polygons within the project area.')}
@@ -309,7 +400,7 @@ geometry = loads(str(project.area.geometry.data))
 </div>
 </%block>
 
-<%block name="allowed_users">
+<%block name="permissions">
 <div class="row">
   <div class="input-group">
     <div class="checkbox">
@@ -358,12 +449,70 @@ geometry = loads(str(project.area.geometry.data))
     </div>
   </div>
 </div>
+<hr>
+<div class="row">
+  <div class="input-group">
+    <div class="checkbox">
+      <label>
+        <%
+          checked = 'checked' if project.requires_validator_role else ''
+        %>
+        <input type="checkbox" name="requires_validator_role" ${checked}>
+        ${_('Only validators can validate')}
+      </label>
+      <div class="help-block">
+        ${_("If checked, only users with the 'validator role' will be able to (in)validate tasks for the current project. If not, anyone can.")}
+      </div>
+    </div>
+  </div>
+</div>
+<hr>
+<div class="row">
+  <div class="input-group">
+    <div class="checkbox">
+      <label>
+        <%
+          checked = 'checked' if project.requires_experienced_mapper_role else ''
+        %>
+        <input type="checkbox" name="requires_experienced_mapper_role" ${checked}>
+        ${_('Only experienced mappers can contribute')}
+      </label>
+      <div class="help-block">
+        ${_("If checked, only users with the 'experienced mapper role' will be able to contribute to the current project. If not, anyone can.")}
+      </div>
+    </div>
+  </div>
+</div>
 <%
   from osmtm.models import dumps
 %>
 <script>
   var allowed_users = ${dumps({user.id: user.as_dict() for user in project.allowed_users})|n};
 </script>
+</%block>
+
+<%block name="labels_">
+<%
+  from osmtm.mako_filters import contrast
+%>
+<div class="form-group">
+    % for l in labels:
+    <%
+    checked = ""
+    if project.labels is not None and l in project.labels:
+      checked = "checked"
+    %>
+    <div class="checkbox">
+        <label>
+          <input type="checkbox" name="label_${l.id}" ${checked}>
+          <span class="label"
+                style="background-color: ${l.color}; color:${l.color|contrast};">
+            ${l.name}
+          </span>
+        </label>
+    </div>
+    % endfor
+</div>
 </%block>
 
 <%block name="misc">
@@ -393,6 +542,34 @@ geometry = loads(str(project.area.geometry.data))
   </span>
   % endif
 </div>
+
+<div class="form-group">
+  <label>${_('Invalidation')}</label>
+  <br>
+  <button type="button" class="btn btn-danger btn-sm" data-toggle="modal" data-target="#invalidateAllModal">
+    ${_('Invalidate All Tasks')}
+  </button>
+  <div class="help-block">
+    <p>
+    ${_('Click this button if project instructions have changed, or if for some reason you need to invalidate all done tasks in a single step.')}
+    </p>
+    <p>
+      <span class="glyphicon glyphicon-exclamation-sign"></span>
+      ${_('WARNING: This cannot be undone.')}
+    </p>
+  </div>
+  <p id="invalidateAllSuccess">
+  </p>
+</div>
+<div class="form-group">
+  <label>${_('Message all contributors')}</label>
+  <br>
+  <button type="button" class="btn btn-default btn-sm" data-toggle="modal" data-target="#messageAllModal">
+    <span class="glyphicon glyphicon-envelope"></span>&nbsp;
+    ${_('Message all contributors')}
+  </button>
+  <p id="messageAllSuccess"></p>
+</div>
 </%block>
 <%block name="markdown_link">
 <div class="help-block pull-right"><small><em>
@@ -403,7 +580,7 @@ geometry = loads(str(project.area.geometry.data))
 
 <%def name="textarea_with_preview(inputname, size=None)">
   <div class="tab-content">
-    ${locale_chooser(inputname=inputname)}
+    ${helpers.locale_chooser(inputname=inputname)}
     % for locale, translation in translations:
     <div id="tab_${inputname}_${locale}"
          data-locale="${locale}"
@@ -442,33 +619,4 @@ geometry = loads(str(project.area.geometry.data))
     % endfor
   </div>
   ${markdown_link()}
-</%def>
-
-<%def name="locale_chooser(inputname)">
-  <div class="btn-group pull-right" id="locale_chooser_${inputname}">
-    % for locale, translation in translations:
-    <a href
-      class="btn btn-default btn-xs ${'active' if locale == 'en' else ''}"
-      data-locale="${locale}">
-      <span class="${'text-muted' if getattr(translation, inputname) == '' else ''}">
-        ${locale}
-      </span>
-    </a>
-    % endfor
-  </div>
-  <script>
-    $('#locale_chooser_${inputname} a').on('click', function() {
-      $(this).addClass('active');
-      $(this).siblings().removeClass('active');
-      var locale = $(this).attr('data-locale');
-      $(this).parents('.form-group').find('.tab-pane').each(function(index, item) {
-        if ($(item).attr('data-locale') == locale) {
-          $(item).addClass('active');
-        } else {
-          $(item).removeClass('active');
-        }
-      });
-      return false;
-    });
-  </script>
 </%def>

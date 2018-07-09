@@ -27,8 +27,16 @@ osmtm.project = (function() {
     tpl: "<li data-value='${name}'>${name}</li>",
     show_the_at: true,
     limit: 10,
-    data: base_url + 'users.json',
     callbacks: {
+      remoteFilter: function(query, callback) {
+        $.getJSON(
+          base_url + 'project/' + project_id + '/task/' + task_id + '/users',
+          {q: query},
+          function(data) {
+            callback(data);
+          }
+        );
+      },
       beforeInsert: function(value)  {
         // username contains a space
         if (value.match((/ /))) {
@@ -99,6 +107,7 @@ osmtm.project = (function() {
     lmap = L.map('leaflet');
     L.control.scale().addTo(lmap);
     // create the tile layer with correct attribution
+<<<<<<< HEAD
     ////var osmUrl='http://{s}.tile.openstreetmap.fr/hot/{z}/{x}/{y}.png';
     ////var osmAttrib=osmAttribI18n;
     ////var osm = new L.TileLayer(osmUrl, {attribution: osmAttrib});
@@ -142,6 +151,12 @@ osmtm.project = (function() {
     var overlays = { };
     lmap.addLayer(OpenStreetMap);
     L.control.layers(baseLayers, overlays).addTo(lmap);
+=======
+    var osmUrl='//tile-{s}.openstreetmap.fr/hot/{z}/{x}/{y}.png';
+    var osmAttrib=osmAttribI18n;
+    var osm = new L.TileLayer(osmUrl, {attribution: osmAttrib});
+    lmap.addLayer(osm);
+>>>>>>> upstream/master
 
     var layer = new L.geoJson(geometry, {
       style: {
@@ -281,12 +296,12 @@ osmtm.project = (function() {
             $('#task').fadeIn();
             setPreferedEditor();
           } else if (request.status == '404'){
-            $('#task_error_msg').html("Task doesn't exist.").show()
+            $('#task_error_msg').html(taskDoesntExist).show()
             .delay(3000)
             .fadeOut();
             clearSelection();
           } else {
-            alert("an error occured");
+            alert(anErrorOccuredI18n);
           }
           checkForUpdates();
         }
@@ -361,6 +376,8 @@ osmtm.project = (function() {
 
     if ($(this).hasClass('disabled')) {
       return false;
+    } else {
+      $(this).addClass('disabled'); // give an indication of activity
     }
 
     var params = {};
@@ -442,6 +459,9 @@ osmtm.project = (function() {
         return options.base + '#map=' +
         [zoom, c[1], c[0]].join('/') +
         '&comment=' + changeset_comment;
+        case 'fp':
+        return options.base + '#' +
+        [zoom, c[1], c[0]].join('/');
 
       }
     }
@@ -464,7 +484,7 @@ osmtm.project = (function() {
         url: url,
         complete: function(t) {
           if (t.status != 200) {
-            alert("JOSM remote control did not respond. Do you have JOSM running and configured to be controlled remotely?");
+            alert(josmRcDidNotRespondI18n);
           } else {
             if (typeof imagery_url != "undefined" && imagery_url !== '') {
               $.ajax({
@@ -500,10 +520,10 @@ osmtm.project = (function() {
       break;
       case "fp":
       url = getLink({
-        base: 'http://fieldpapers.org/compose/select?',
+        base: 'http://fieldpapers.org/compose',
         bounds: task_bounds,
         centroid: task_centroid,
-        protocol: 'llz'
+        protocol: 'fp'
       });
       window.open(url);
       break;
@@ -568,7 +588,7 @@ osmtm.project = (function() {
   function setPreferedEditor() {
     if (osmtm.prefered_editor !== '') {
       $('#prefered_editor').text($('#' + osmtm.prefered_editor + ' a').text());
-      $('#josm_task_boundary_tip').toggle(osmtm.prefered_editor == 'josm');
+      // $('#josm_task_boundary_tip').toggle(osmtm.prefered_editor == 'josm');
     }
   }
 
@@ -595,7 +615,9 @@ osmtm.project = (function() {
 
     hideTooltips();
     var formData = $(form).serializeObject();
-    var submitName = $("button[type=submit][clicked=true]").attr("name");
+    var submitButton = $("button[type=submit][clicked=true]");
+    submitButton.addClass('disabled');
+    var submitName = submitButton.attr("name");
 
     // require a comment for invalidation
     if (submitName == 'invalidate' && !formData.comment.trim()) {
@@ -802,7 +824,6 @@ osmtm.project = (function() {
 
   function checkForUpdates() {
     window.clearTimeout(checkTimeout);
-    checkTimeout = window.setTimeout(checkForUpdates, 5000);
     if (document.hasFocus && !document.hasFocus()) {
       clearInterval(pageFocusInterval);
       pageFocusInterval = setInterval( checkPageFocus, 200 );
@@ -816,6 +837,7 @@ osmtm.project = (function() {
         interval: interval
       },
       success: function(data){
+        checkTimeout = window.setTimeout(checkForUpdates, 5000);
         if (data.updated) {
           $.each(data.updated, function(index, task) {
             tasksLayer.eachLayer(function(layer) {
@@ -828,8 +850,12 @@ osmtm.project = (function() {
           });
           updateLockedCounter();
         }
-      }, dataType: "json"}
-    );
+      },
+      error: function(){
+        checkTimeout = window.setTimeout(checkForUpdates, 5000);
+      },
+      dataType: "json"
+    });
     lastUpdateCheck = now;
   }
 

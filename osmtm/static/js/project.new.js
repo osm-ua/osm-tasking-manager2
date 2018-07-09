@@ -8,7 +8,9 @@ osmtm.project_new = (function() {
 
   function createMap() {
     map = L.map('leaflet').setView([0, 0], 1);
+    L.control.scale().addTo(map);
     // create the tile layer with correct attribution
+<<<<<<< HEAD
     ////var osmUrl='http://{s}.tile.openstreetmap.fr/hot/{z}/{x}/{y}.png';
     ////var osmAttrib=osmAttribI18n;
     ////var osm = new L.TileLayer(osmUrl, {attribution: osmAttrib, drawControl: true});
@@ -55,10 +57,16 @@ osmtm.project_new = (function() {
     var overlays = { };
     map.addLayer(OpenStreetMap);
     L.control.layers(baseLayers, overlays).addTo(map);
+=======
+    var osmUrl='//tile-{s}.openstreetmap.fr/hot/{z}/{x}/{y}.png';
+    var osmAttrib=osmAttribI18n;
+    var osm = new L.TileLayer(osmUrl, {attribution: osmAttrib, drawControl: true});
+    map.addLayer(osm);
+>>>>>>> upstream/master
 
     var osmGeocoder = new L.Control.OSMGeocoder();
     map.addControl(osmGeocoder);
-    
+
     drawControl = new L.Control.Draw({
       position: 'topleft',
       draw: {
@@ -139,6 +147,29 @@ osmtm.project_new = (function() {
           message: droppedFileWasUnreadableI18n
         });
       };
+    } catch (e) {
+      callback({
+        message: droppedFileWasUnreadableI18n
+      });
+    }
+  }
+
+  // for shapefile zip
+  function readAsArrayBuffer(f, callback) {
+    try {
+      var reader = new FileReader();
+      reader.onload = function(e) {
+        if (e.target && e.target.result) callback(null, e.target.result);
+        else callback({
+          message: droppedFileCouldntBeLoadedI18n
+        });
+      };
+      reader.onerror = function(e) {
+        callback({
+          message: droppedFileWasUnreadableI18n
+        });
+      };
+      reader.readAsArrayBuffer(f);
     } catch (e) {
       callback({
         message: droppedFileWasUnreadableI18n
@@ -255,6 +286,17 @@ osmtm.project_new = (function() {
             omnivore.kml.parse(text, null, vector);
             onAdd();
           });
+        } else if (file.substr(-3) == 'zip') {
+          try {
+            readAsArrayBuffer($(this)[0].files[0], function (err, buff) {
+              shp(buff).then(function(gj) {
+                vector.addData(gj);
+                onAdd();
+              });
+            });
+          } catch (e) {
+            alert(pleaseProvideGeojsonOrKmlFileI18n);
+          }
         } else {
           alert(pleaseProvideGeojsonOrKmlFileI18n);
         }

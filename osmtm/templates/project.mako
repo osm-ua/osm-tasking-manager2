@@ -9,7 +9,7 @@
   % elif project.status == project.status_archived:
    (${_('Archived')})
   % endif
-  % if user and (user.is_admin or user.is_project_manager):
+  % if user and user.is_project_manager:
     <a class="btn btn-link btn-sm pull-right"
        href="${request.route_path('project_tasks_json', project=project.id)}"
        target="_blank">
@@ -88,7 +88,7 @@ else:
     </div>
   </div>
 </div>
-<script src="${request.static_url('osmtm:static/js/lib/leaflet.js')}"></script>
+<script src="${request.static_path('osmtm:static/js/lib/leaflet.js')}"></script>
 <script>
 <%
 from shapely.wkb import loads
@@ -119,9 +119,9 @@ var statesClasses = ["ready", "invalidated", "done", "validated"];
 var commentRequiredMsg = "${_('You must leave a comment.')}";
 var highPriorityI18n = "${_('High priority')}";
 </script>
-  <script src="${request.static_url('osmtm:static/js/lib/d3.v3.js')}"></script>
-  <script type="text/javascript" src="${request.static_url('osmtm:static/js/project.js')}"></script>
-  <script type="text/javascript" src="${request.static_url('osmtm:static/js/task.difficulty.js')}"></script>
-  <script src="${request.static_url('osmtm:static/js/lib/At.js/js/jquery.caret.min.js')}"></script>
-  <script src="${request.static_url('osmtm:static/js/lib/At.js/js/jquery.atwho.js')}"></script>
+  <script src="${request.static_path('osmtm:static/js/lib/d3.v3.js')}"></script>
+  <script type="text/javascript" src="${request.static_path('osmtm:static/js/project.js')}"></script>
+  <script type="text/javascript" src="${request.static_path('osmtm:static/js/task.difficulty.js')}"></script>
+  <script src="${request.static_path('osmtm:static/js/lib/At.js/js/jquery.caret.min.js')}"></script>
+  <script src="${request.static_path('osmtm:static/js/lib/At.js/js/jquery.atwho.js')}"></script>
 </%block>

@@ -8,6 +8,10 @@
 <div class="container" ng-app="users">
   <div class="row" ng-controller="usersCrtl">
     <div class="col-md-8">
+      <div class="form-group">
+        <input type="text" id="user_search"
+        placeholder="${_('Search')}" class="form-control">
+      </div>
       ${paginate()}
       <ul>
         % if paginator.items:
@@ -16,8 +20,15 @@
               <a href="user/${user.username}">${user.username}</a>
                 % if user.is_admin:
                   <i class="glyphicon glyphicon-star user-admin"></i>
-                % elif user.is_project_manager:
+                % endif
+                % if user.is_project_manager:
                   <i class="glyphicon glyphicon-star user-project-manager"></i>
+                % endif
+                % if user.is_validator:
+                  <i class="glyphicon glyphicon-ok"></i>
+                % endif
+                % if user.is_experienced_mapper:
+                  <i class="glyphicon glyphicon-star"></i>
                 % endif
             </li>
           % endfor
@@ -27,16 +38,67 @@
     </div>
     <div class="col-md-4">
       <small>
-        <p>${len(users)} ${_('Users')}</p>
+        <p>${paginator.item_count} ${_('Users')}</p>
         ${_('Keys:')}
-        <ul>
-          <li><i class="glyphicon glyphicon-star user-admin"></i> ${_('Administrator')}</li>
-          <li><i class="glyphicon glyphicon-star user-project-manager"></i> ${_('Project Manager')}</li>
-        </ul>
+        <form>
+          <ul class="list-unstyled">
+            <li>
+              <label>
+                <input type="checkbox" name="role" value="1" ${'checked' if u'1' in request.params.getall('role') else ''}>
+                <i class="glyphicon glyphicon-star user-admin"></i>
+                ${_('Administrator')}
+              </label>
+            </li>
+            <li>
+              <label>
+                <input type="checkbox" name="role" value="2" ${'checked' if u'2' in request.params.getall('role') else ''}>
+                <i class="glyphicon glyphicon-star user-project-manager"></i>
+                ${_('Project Manager')}
+              </label>
+            </li>
+            <li>
+              <label>
+                <input type="checkbox" name="role" value="4" ${'checked' if u'4' in request.params.getall('role') else ''}>
+                <i class="glyphicon glyphicon-ok"></i>
+                ${_('Validator')}
+              </label>
+            </li>
+            <li>
+              <label>
+                <input type="checkbox" name="role" value="8" ${'checked' if u'8' in request.params.getall('role') else ''}>
+                <i class="glyphicon glyphicon-star"></i>
+                ${_('Experienced mapper')}
+              </label>
+            </li>
+          </ul>
+        </form>
       </small>
     </div>
   </div>
 </div>
+<script>
+new autoComplete({
+  'selector'  : document.getElementById('user_search'),
+  'minChars'  : 1,
+  'source'    : function(term, suggest) {
+    term = term.toLowerCase();
+    $.getJSON(
+      base_url + 'users.json',
+      {q: term},
+      function(users) {
+        suggest(users);
+      }
+    );
+  },
+  'onSelect' : function(e, term, item) {
+    window.location.href = base_url + 'user/' + term;
+    e.preventDefault();
+  }
+});
+$('input[name=role]').change(function() {
+  $('form').submit();
+});
+</script>
 </%block>
 
 <%def name="paginate()">
@@ -52,3 +114,8 @@
   </div>
 </div>
 </%def>
+
+<%block name="extrascripts">
+<link rel="stylesheet" href="${request.static_path('osmtm:static/js/lib/JavaScript-AutoComplete/auto-complete.css')}">
+<script src="${request.static_path('osmtm:static/js/lib/JavaScript-AutoComplete/auto-complete.js')}"></script>
+</%block>

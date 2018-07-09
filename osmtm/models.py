@@ -63,10 +63,12 @@ from .utils import (
 from zope.sqlalchemy import ZopeTransactionExtension
 
 import datetime
+import re
 
 from json import (
     JSONEncoder,
     dumps as _dumps,
+    loads as _loads,
 )
 import functools
 
@@ -75,6 +77,8 @@ from sqlalchemy_i18n import (
     make_translatable,
     translation_base,
 )
+
+from pyramid.threadlocal import get_current_registry
 
 
 class ST_Multi(GenericFunction):
@@ -101,6 +105,7 @@ class ST_SetSRID(GenericFunction):
     name = 'ST_SetSRID'
     type = Geometry
 
+
 DBSession = scoped_session(sessionmaker(extension=ZopeTransactionExtension()))
 Base = declarative_base()
 make_translatable()
@@ -113,6 +118,8 @@ users_licenses_table = Table(
 # user roles
 ADMIN = 1
 PROJECT_MANAGER = 2
+VALIDATOR = 4
+EXPERIENCED_MAPPER = 8
 
 
 class User(Base):
@@ -121,7 +128,9 @@ class User(Base):
     username = Column(Unicode)
     role_admin = ADMIN
     role_project_manager = PROJECT_MANAGER
-    role = Column(Integer)
+    role_validator = VALIDATOR
+    role_experienced_mapper = EXPERIENCED_MAPPER
+    role = Column(Integer, default=0)
 
     accepted_licenses = relationship("License", secondary=users_licenses_table)
     private_projects = relationship("Project",
@@ -139,19 +148,30 @@ class User(Base):
 
     @hybrid_property
     def is_admin(self):
-        return self.role is self.role_admin
+        return self.role & self.role_admin
 
     @hybrid_property
     def is_project_manager(self):
-        return self.role is self.role_project_manager
+        return self.role & self.role_project_manager
+
+    @hybrid_property
+    def is_validator(self):
+        return self.role & self.role_validator
+
+    @hybrid_property
+    def is_experienced_mapper(self):
+        return self.role & self.role_experienced_mapper
 
     def as_dict(self):
         return {
             "id": self.id,
             "username": self.username,
             "is_admin": self.is_admin,
-            "is_project_manager": self.is_project_manager
+            "is_project_manager": self.is_project_manager,
+            "is_validator": self.is_validator,
+            "is_experienced_mapper": self.is_experienced_mapper,
         }
+
 
 # task states
 READY = 0
@@ -198,6 +218,9 @@ class TaskLock(Base):
     user_id = Column(BigInteger, ForeignKey('users.id'))
     user = relationship(User)
     date = Column(DateTime, default=datetime.datetime.utcnow)
+    # duration of the lock once the task is unlocked
+    # relevant only for records with lock == true
+    duration = 0
 
     __table_args__ = (ForeignKeyConstraint([task_id, project_id],
                                            ['task.id', 'task.project_id']),
@@ -273,6 +296,7 @@ class Task(Base):
     geometry = Column(Geometry('MultiPolygon', srid=4326))
     date = Column(DateTime, default=datetime.datetime.utcnow)
     lock_date = Column(DateTime, default=None)
+    extra_properties = Column(Unicode)
 
     assigned_to_id = Column(Integer, ForeignKey('users.id'))
     assigned_to = relationship(User)
@@ -283,6 +307,11 @@ class Task(Base):
     difficulty_hard = 3
     difficulty = Column(Integer)
 
+    parent_id = Column(Integer)
+
+    # Note to developers
+    # If you change this relationship please allow modify `get_task` method
+    # in `project.py`
     cur_lock = relationship(
         TaskLock,
         primaryjoin=lambda: and_(
@@ -298,6 +327,9 @@ class Task(Base):
         uselist=False
     )
 
+    # Note to developers
+    # If you change this relationship please allow modify `get_task` method
+    # in `project.py`
     cur_state = relationship(
         TaskState,
         primaryjoin=lambda: and_(
@@ -335,10 +367,12 @@ class Task(Base):
                       Index('task_lock_date_', date.desc()),
                       {},)
 
-    def __init__(self, x, y, zoom, geometry=None):
+    def __init__(self, x, y, zoom, geometry=None, properties=None):
         self.x = x
         self.y = y
         self.zoom = zoom
+        if properties is not None:
+            self.extra_properties = unicode(_dumps(properties))
         if geometry is None:
             geometry = self.to_polygon()
             multipolygon = MultiPolygon([geometry])
@@ -360,6 +394,8 @@ class Task(Base):
             'state': self.cur_state.state if self.cur_state else 0,
             'locked': self.lock_date is not None
         }
+        if self.difficulty:
+            properties['difficulty'] = self.difficulty
         if self.x and self.y and self.zoom:
             properties['x'] = self.x
             properties['y'] = self.y
@@ -369,6 +405,30 @@ class Task(Base):
             id=self.id,
             properties=properties
         )
+
+    def get_extra_instructions(self):
+
+        instructions = self.project.per_task_instructions
+
+        def replace_colon(matchobj):
+            return matchobj.group(0).replace(':', '_')
+
+        instructions = re.sub('\{([^}]*)\}', replace_colon, instructions)
+
+        properties = {}
+        if self.x:
+            properties['x'] = str(self.x)
+        if self.y:
+            properties['y'] = str(self.y)
+        if self.zoom:
+            properties['z'] = str(self.zoom)
+        if self.extra_properties:
+            extra_properties = _loads(self.extra_properties)
+            for key in extra_properties:
+                properties.update({
+                    key.replace(':', '_'): extra_properties[key]
+                })
+        return instructions.format(**properties)
 
 
 @event.listens_for(Task, "after_update")
@@ -410,6 +470,7 @@ def area_after_insert(mapper, connection, target):
         values(centroid=ST_Centroid(target.geometry))
     )
 
+
 project_allowed_users = Table(
     'project_allowed_users',
     Base.metadata,
@@ -426,12 +487,19 @@ class PriorityArea(Base):
     def __init__(self, geometry):
         self.geometry = geometry
 
+
 project_priority_areas = Table(
     'project_priority_areas',
     Base.metadata,
     Column('project_id', Integer, ForeignKey('project.id')),
     Column('priority_area_id', Integer, ForeignKey('priority_area.id'))
 )
+
+
+project_labels_table = Table(
+    'project_labels', Base.metadata,
+    Column('project', Integer, ForeignKey('project.id')),
+    Column('label', Integer, ForeignKey('label.id')))
 
 
 # A project corresponds to a given mapping job to do on a given area
@@ -490,6 +558,14 @@ class Project(Base, Translatable):
     priority_areas = relationship(PriorityArea,
                                   secondary=project_priority_areas)
 
+    # whether the validation should require the validator role or not
+    requires_validator_role = Column(Boolean, default=False)
+
+    labels = relationship("Label", secondary=project_labels_table)
+
+    # whether the validation should require the validator role or not
+    requires_experienced_mapper_role = Column(Boolean, default=False)
+
     def __init__(self, name, user=None):
         self.name = name
         self.author = user
@@ -510,13 +586,22 @@ class Project(Base, Translatable):
 
     def import_from_geojson(self, input):
 
-        geoms = parse_geojson(input)
+        features = parse_geojson(input)
 
         tasks = []
-        for geom in geoms:
-            if not isinstance(geom, MultiPolygon):
-                geom = MultiPolygon([geom])
-            tasks.append(Task(None, None, None, 'SRID=4326;%s' % geom.wkt))
+        for feature in features:
+            if not isinstance(feature.geometry, MultiPolygon):
+                feature.geometry = MultiPolygon([feature.geometry])
+
+            properties = feature.properties
+
+            tasks.append(Task(
+                None,
+                None,
+                None,
+                'SRID=4326;%s' % feature.geometry.wkt,
+                properties
+            ))
 
         self.tasks = tasks
 
@@ -614,10 +699,16 @@ EXPIRATION_DELTA = datetime.timedelta(seconds=2 * 60 * 60)
 @event.listens_for(Project, "after_insert")
 def project_after_insert(mapper, connection, target):
     project_table = Project.__table__
+    settings = get_current_registry().settings
+    # settings may be None
+    # This happens for example when initializing the database
+    default_comment_prefix = settings.get('default_comment_prefix') \
+        if settings is not None else None
+    comment_prefix = default_comment_prefix or '#hotosm-project'
     connection.execute(
         project_table.update().
         where(project_table.c.id == target.id).
-        values(changeset_comment=u'#hotosm-project-%d' % target.id)
+        values(changeset_comment=u'%s-%d' % (comment_prefix, target.id))
     )
 
 
@@ -667,6 +758,25 @@ class Message(Base):
         self.message = message
 
 
+class Label(Base, Translatable):
+    __tablename__ = 'label'
+    id = Column(Integer, primary_key=True)
+    name = Column(Unicode, nullable=False)
+    color = Column(Unicode)
+    projects = relationship("Project", secondary=project_labels_table)
+
+    locale = 'en'
+
+    def __init__(self):
+        pass
+
+
+class LabelTranslation(translation_base(Label)):
+    __tablename__ = 'label_translation'
+
+    description = Column(Unicode, default=u'')
+
+
 class ExtendedJSONEncoder(JSONEncoder):
 
     def default(self, obj):  # pragma: no cover
@@ -675,5 +785,6 @@ class ExtendedJSONEncoder(JSONEncoder):
             return obj.isoformat(' ')
 
         return JSONEncoder.default(self, obj)
+
 
 dumps = functools.partial(_dumps, cls=ExtendedJSONEncoder)

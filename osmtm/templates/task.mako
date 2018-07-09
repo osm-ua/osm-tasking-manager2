@@ -84,7 +84,7 @@ var gpx_url = window.location.origin +
 % if user is not None and \
     project.imagery is not None and project.imagery != 'None' and \
     (project.license in user.accepted_licenses or not project.license):
-var imagery_url = "${project.imagery}";
+var imagery_url = "${project.imagery|n}";
 % endif
 var changeset_comment = "${quote(project.changeset_comment.encode('utf8'), '')}";
 osmtm.project.initAtWho();
@@ -109,6 +109,6 @@ query = queryprefix + querymiddle + querysuffix
 query = urllib.quote_plus(query.encode('utf8'))
 %>
 <small>
-  <a href="http://overpass-turbo.eu/map.html?Q=${query}" rel="tooltip" data-original-title="${_('See the changes in this area using the overpass-turbo API.')}"><span class="glyphicon glyphicon-share-alt"></span> ${_('overpass-turbo')}</a>
+  <a href="http://overpass-turbo.eu/?Q=${query}&R" rel="tooltip" data-original-title="${_('See the changes in this area using overpass turbo.')}"><span class="glyphicon glyphicon-share-alt"></span> ${_('overpass turbo')}</a>
 </small>
 </%def>

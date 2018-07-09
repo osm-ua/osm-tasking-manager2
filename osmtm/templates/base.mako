@@ -5,25 +5,34 @@
 <html>
   <head>
   <title>${custom.instance_name()} - ${self.title()}</title>
-    <link rel="shortcut icon" href="${request.static_url('osmtm:static/img/favicon.ico')}">
-    <link rel="stylesheet" href="${request.static_url('osmtm:static/css/main.css')}">
-    <link rel="stylesheet" href="${request.static_url('osmtm:static/js/lib/leaflet.css')}">
-    <script src="${request.static_url('osmtm:static/js/lib/jquery-1.7.2.min.js')}"></script>
-    <script src="${request.static_url('osmtm:static/js/lib/showdown.js')}"></script>
-    <script src="${request.static_url('osmtm:static/js/lib/jquery-timeago/jquery.timeago.js')}"></script>
+    <link rel="shortcut icon" href="${request.static_path('osmtm:static/img/favicon.ico')}">
+    <link rel="stylesheet" href="${request.static_path('osmtm:static/css/main.css')}">
+    <link rel="stylesheet" href="${request.static_path('osmtm:static/js/lib/leaflet.css')}">
+    <script src="${request.static_path('osmtm:static/js/lib/jquery-1.12.3.min.js')}"></script>
+    <script src="${request.static_path('osmtm:static/js/lib/velocity.min.js')}"></script>
+    <script src="${request.static_path('osmtm:static/js/lib/velocity.ui.min.js')}"></script>
+    <script src="${request.static_path('osmtm:static/js/lib/showdown/dist/showdown.js')}"></script>
+    <script src="${request.static_path('osmtm:static/js/lib/showdown-youtube.js')}"></script>
+    <script src="${request.static_path('osmtm:static/js/lib/moment/min/moment.min.js')}"></script>
     <%
-      timeago_locale_baseurl = 'osmtm:static/js/lib/jquery-timeago/locales/jquery.timeago.%s.js'
+      moment_locale_baseurl = 'osmtm:static/js/lib/moment/locale/%s.js'
       try:
-        timeago_locale = request.static_url(timeago_locale_baseurl % request.locale_name.replace('_', '-'))
+        moment_locale = request.static_path(moment_locale_baseurl % request.locale_name.replace('_', '-'))
       except IOError:
-        timeago_locale = request.static_url(timeago_locale_baseurl % request.locale_name[:2])
-      except IOError:
-        timeago_locale = request.static_url(timeago_locale_baseurl % 'en')
+        try:
+          moment_locale = request.static_path(moment_locale_baseurl % request.locale_name[:2])
+        except:
+          moment_locale = None
     %>
-    <script src="${timeago_locale}"></script>
-    <script src="${request.static_url('osmtm:static/js/lib/sammy-latest.min.js')}"></script>
-    <script src="${request.static_url('osmtm:static/js/shared.js')}"></script>
-    <script src="${request.static_url('osmtm:static/bootstrap/dist/js/bootstrap.min.js')}"></script>
+    % if moment_locale:
+    <script src="${moment_locale}"></script>
+    % endif
+    <script src="${request.static_path('osmtm:static/js/timeago.js')}"></script>
+    <script src="${request.static_path('osmtm:static/js/duration.js')}"></script>
+    <script src="${request.static_path('osmtm:static/js/lib/sammy-latest.min.js')}"></script>
+    <script src="${request.static_path('osmtm:static/bootstrap/dist/js/bootstrap.min.js')}"></script>
+    <script src="${request.static_path('osmtm:static/js/shared.js')}"></script>
+
 <%
 from osmtm.models import DBSession, TaskComment
 login_url= request.route_path('login', _query=[('came_from', request.url)])
@@ -34,8 +43,10 @@ comments = []
 %>
     <script>
         var base_url = "${request.route_path('home')}";
-        var markdown_ref_url = "${request.static_url('osmtm:static/html/markdown_quick_ref.html')}";
+        var markdown_ref_url = "${request.route_path('markdown_ref')}";
+        var unreadMsgsI18n = "${_('You have unread messages')}";
     </script>
+    <%block name="extrascripts"></%block>
 
   </head>
   <body id="${page_id}">
@@ -52,11 +63,6 @@ comments = []
           </li>
           <%include file="languages_menu.mako" args="languages=languages, languages_full=languages_full"/>
           % if user:
-          <%
-              badge = ""
-              if len(comments) > 0:
-                  badge = '<sup><span class="badge badge-important">%s</span></sup>' % len(comments)
-          %>
           <%include file="user_menu.mako" />
           % else:
           <li>
@@ -105,7 +111,7 @@ ${message | n}
       </div>
     </div>
 % endif
-
+    ${custom.before_content()}
     <%block name="content"></%block>
 % if page_id is not 'project':
     <footer class="footer">
@@ -124,5 +130,6 @@ ${message | n}
       </div>
     </footer>
 % endif
+  ${custom.analytics()}
   </body>
 </html>

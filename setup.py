@@ -17,7 +17,7 @@ requires = [
     'waitress',
     'psycopg2',
     'markdown',
-    'bleach==1.4',
+    'bleach==1.4.3',
     'nose',
     'coverage',
     'oauth2',
@@ -33,14 +33,15 @@ requires = [
     'alembic==0.6.4',
     'transifex-client',
     'pyramid-exclog==0.7',
-    'httpretty',
+    'httpretty==0.9.4',
     'pygments',
-    'gitversion',
     'APScheduler==3.0.3',
+    'python-oembed == 0.2.1',
+    'colour==0.1.2',
 ]
 
 setup(name='osmtm',
-      version='2.9-dev',
+      version='2.14-dev',
       description='osmtm',
       long_description=README + '\n\n' + CHANGES,
       classifiers=[
